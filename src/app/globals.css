@@ -181,6 +181,11 @@
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    /* Prevent any horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* iOS Safari: behind-status-bar fill so the navy announcement bar
+       extends visually into the system top-inset on phones with notches */
+    background: var(--color-navy);
   }
 
   body {
@@ -190,6 +195,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.55;
+    overflow-x: hidden;
+    /* Account for iOS safe-area on the bottom */
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   h1,

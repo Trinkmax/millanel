@@ -11,8 +11,19 @@ const ITEMS = [
 
 export function AnnouncementBar() {
   return (
-    <div className="bg-navy text-cream overflow-hidden">
-      <div className="relative flex h-9 items-center">
+    <div
+      className="bg-navy text-cream overflow-hidden w-full"
+      style={{ paddingTop: "env(safe-area-inset-top, 0)" }}
+    >
+      <div
+        className="relative flex h-9 items-center w-full"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0, black 5%, black 95%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0, black 5%, black 95%, transparent 100%)",
+        }}
+      >
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
           transition={{

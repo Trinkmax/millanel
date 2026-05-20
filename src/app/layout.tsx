@@ -1,7 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#2A3F70" },
+    { media: "(prefers-color-scheme: dark)", color: "#2A3F70" },
+  ],
+};
 
 const fraunces = Fraunces({
   variable: "--font-display",
@@ -63,7 +73,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${manrope.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="bg-background text-foreground flex min-h-full flex-col">
+      <body className="bg-background text-foreground flex min-h-full flex-col overflow-x-hidden">
         {children}
         <Toaster
           position="top-center"
