@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowRight,  Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
@@ -150,43 +151,44 @@ export function Hero() {
 
 function HeroVisual() {
   return (
-    <div className="relative aspect-[4/5] w-full max-w-md mx-auto">
-      {/* Background card */}
+    <div className="relative aspect-[6/7] w-full max-w-md mx-auto">
+      {/* Soft background card peeking out */}
       <motion.div
         animate={{ rotate: [-3, -1, -3] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         className="absolute inset-0 rounded-[28px] bg-sky shadow-lift"
       />
-      {/* Main card */}
+      {/* Campaign cover photo */}
       <motion.div
         initial={{ rotate: 5 }}
         animate={{ rotate: [5, 3, 5] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-cream-50 via-blush-100 to-cream-100 shadow-deep overflow-hidden border border-cream-200"
+        className="absolute inset-0 rounded-[28px] shadow-deep overflow-hidden border border-cream-200"
       >
-        <div className="paper-grain absolute inset-0" />
-        <div className="relative h-full p-8 md:p-10 flex flex-col">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="eyebrow text-navy-700/80">Edición</p>
-              <p className="font-display italic text-5xl md:text-6xl text-navy-900 leading-none mt-1">
-                06
-              </p>
-            </div>
-            <MillanelMark size={42} className="text-navy" />
-          </div>
+        <Image
+          src="/portada-c06.jpg"
+          alt="Campaña Millanel C06 · Día del Padre"
+          fill
+          sizes="(max-width: 1024px) 90vw, 45vw"
+          priority
+          className="object-cover"
+        />
+      </motion.div>
 
-          <div className="mt-auto space-y-5">
-            <p className="font-display text-3xl md:text-4xl leading-tight text-navy-900">
-              <em className="italic font-normal">Belleza</em>
-              <br />
-              <span className="block">que se siente</span>
-              <span className="block italic text-navy-700">tan tuya.</span>
+      {/* Floating editorial tag — stays steady while the photo card rotates */}
+      <motion.div
+        initial={{ opacity: 0, y: 12, rotate: -4 }}
+        animate={{ opacity: 1, y: 0, rotate: -4 }}
+        transition={{ duration: 0.9, delay: 0.9, ease: EASE }}
+        className="absolute -bottom-3 -left-3 md:-bottom-5 md:-left-5 rotate-[-6deg]"
+      >
+        <div className="flex items-center gap-3 bg-cream-50 rounded-2xl shadow-medium border border-line px-4 py-3">
+          <MillanelMark size={26} />
+          <div className="leading-none">
+            <p className="num-eyebrow text-navy-700 text-xs">N°06 · 2026</p>
+            <p className="font-display italic text-navy-900 text-base mt-0.5">
+              Edición vigente
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <span className="h-px w-10 bg-navy-300" />
-              <span className="eyebrow text-navy-700">Cintia Barletta · Frías</span>
-            </div>
           </div>
         </div>
       </motion.div>
