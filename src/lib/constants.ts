@@ -15,9 +15,9 @@ export const SITE = {
     province: "Santiago del Estero",
     country: "Argentina",
     postalCode: "G4233",
-    phone: "+54 9 3854 00-0000",
-    whatsapp: "5493854000000",
-    email: "ventas@millanelfrias.ar",
+    phone: "+54 9 2494 00-7008",
+    whatsapp: "5492494007008",
+    email: "cintia-barletta@hotmail.com",
     hours: "Lun a Sáb · 09:00 – 13:00 y 17:00 – 21:00",
   },
   social: {

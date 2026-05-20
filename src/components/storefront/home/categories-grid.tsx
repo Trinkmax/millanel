@@ -25,12 +25,17 @@ export function CategoriesGrid({ categories }: CategoriesGridProps) {
     setCanPrev(scrollLeft > 5);
     setCanNext(scrollLeft + clientWidth < scrollWidth - 5);
 
+    // Active = whichever card's CENTER is closest to the viewport center.
+    // (Matches the visual perception: the card that "feels" active.)
     const cards = el.querySelectorAll<HTMLElement>("[data-cat-card]");
-    const parentLeft = el.getBoundingClientRect().left;
+    const parentRect = el.getBoundingClientRect();
+    const parentCenter = parentRect.left + parentRect.width / 2;
     let closest = 0;
     let closestDistance = Infinity;
     cards.forEach((card, i) => {
-      const distance = Math.abs(card.getBoundingClientRect().left - parentLeft);
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const distance = Math.abs(cardCenter - parentCenter);
       if (distance < closestDistance) {
         closestDistance = distance;
         closest = i;
@@ -74,7 +79,14 @@ export function CategoriesGrid({ categories }: CategoriesGridProps) {
           // overflow-y to "auto" when overflow-x is set (CSS spec behavior).
           "overflow-x-auto overflow-y-clip",
           "snap-x snap-mandatory",
-          "-mx-5 px-5 md:-mx-10 md:px-10",
+          // Escape parent's container-page padding so scroller spans full viewport
+          "-mx-5 md:-mx-10",
+          // Small symmetric padding. Combined with per-card snap-align
+          // (start/center/end) this makes:
+          //   • Card 1 → pinned to left edge (small left margin, peek right)
+          //   • Middle cards → centered (peek both sides)
+          //   • Last card → pinned to right edge (peek left, small right margin)
+          "px-5 sm:px-8 md:px-10",
           // Vertical breathing room for shadow + entrance animation
           "py-3 pb-10",
           // Hide scrollbar
@@ -90,10 +102,10 @@ export function CategoriesGrid({ categories }: CategoriesGridProps) {
             category={cat}
             index={idx}
             total={categories.length}
+            isFirst={idx === 0}
+            isLast={idx === categories.length - 1}
           />
         ))}
-        {/* End cap so the last card snaps comfortably on mobile */}
-        <div className="shrink-0 w-1 md:w-2" aria-hidden />
       </div>
 
       {/* Footer: numerical counter + progress + active label + mobile arrows */}
@@ -182,10 +194,14 @@ function CategoryCard({
   category,
   index,
   total,
+  isFirst,
+  isLast,
 }: {
   category: Category;
   index: number;
   total: number;
+  isFirst: boolean;
+  isLast: boolean;
 }) {
   return (
     <motion.article
@@ -199,9 +215,21 @@ function CategoryCard({
         delay: Math.min(index * 0.05, 0.35),
       }}
       className={cn(
-        "snap-start shrink-0",
-        // Editorial sizing — one+peek on mobile, two on tablet, ~three on desktop
-        "w-[82vw] sm:w-[58vw] md:w-[44%] lg:w-[34%] xl:w-[30%]",
+        "shrink-0",
+        // Mobile snap behavior:
+        //   • first → pin to left edge (peek of next on right)
+        //   • last  → pin to right edge (peek of prev on left)
+        //   • middle → center (peek both sides, symmetric)
+        isFirst
+          ? "snap-start"
+          : isLast
+            ? "snap-end"
+            : "snap-center",
+        // Desktop: simpler — always snap to start since 2–3 cards fit at once
+        "md:!snap-start",
+        // Editorial sizing — smaller card width = bigger neighbour peek.
+        // mobile: ~46px peek on each side · sm: ~112px peek · md+: 2–3 cards visible
+        "w-[68vw] sm:w-[56vw] md:w-[44%] lg:w-[34%] xl:w-[30%]",
       )}
     >
       <Link

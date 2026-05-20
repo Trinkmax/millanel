@@ -211,7 +211,10 @@
     letter-spacing: -0.012em;
     line-height: 1.05;
     text-wrap: balance;
-    color: var(--color-navy-900);
+    /* Inherit from parent so headings on dark backgrounds (bg-navy + text-cream)
+       turn cream automatically. Body's text-foreground (ink ≈ navy-900) keeps
+       them dark on light backgrounds — same look as before. */
+    color: inherit;
     font-variation-settings: "SOFT" 100, "opsz" 144;
   }
 
