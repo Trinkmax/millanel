@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Send, MessageCircle } from "lucide-react";
+import { Send } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,7 +87,7 @@ export function ContactForm() {
           </a>
         </Button>
         <Button type="submit" variant="whatsapp" className="flex-1" size="lg">
-          <MessageCircle className="h-4 w-4" />
+          <WhatsAppIcon size={16} />
           Enviar por WhatsApp
         </Button>
       </div>

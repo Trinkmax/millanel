@@ -69,7 +69,7 @@ export function SearchDialog({ className }: { className?: string }) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscá un perfume, una crema, un mate…"
-              className="flex-1 bg-transparent text-[15px] font-sans focus:outline-none placeholder:text-mute-soft"
+              className="flex-1 bg-transparent text-base md:text-[15px] font-sans focus:outline-none placeholder:text-mute-soft"
             />
             {q && (
               <button

@@ -5,13 +5,13 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  MessageCircle,
   Truck,
   Store,
   CreditCard,
   ArrowRight,
   MapPin,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -214,7 +214,7 @@ export default async function OrderPage({ params, searchParams }: PageProps) {
               target="_blank"
               rel="noreferrer"
             >
-              <MessageCircle className="h-4 w-4" />
+              <WhatsAppIcon size={16} />
               Escribir por WhatsApp
             </a>
           </Button>

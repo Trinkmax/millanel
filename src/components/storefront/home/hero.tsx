@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowRight, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowRight,  Sparkles } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
 import { SITE } from "@/lib/constants";
@@ -111,7 +112,7 @@ export function Hero() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <MessageCircle className="h-4 w-4" />
+                <WhatsAppIcon size={16} />
                 Hablanos por WhatsApp
               </a>
             </Button>

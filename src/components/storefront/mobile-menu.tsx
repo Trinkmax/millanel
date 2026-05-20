@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Sparkles, MapPin } from "lucide-react";
+import { Menu, X, MapPin } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { MillanelWordmark } from "@/components/brand/millanel-wordmark";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { SITE } from "@/lib/constants";
 import type { Category } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -90,7 +91,7 @@ export function MobileMenu({ categories }: MobileMenuProps) {
                 onClick={() => setOpen(false)}
                 className="text-[#1DAE54]"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <WhatsAppIcon size={14} />
                 WhatsApp
               </NavLink>
             </li>

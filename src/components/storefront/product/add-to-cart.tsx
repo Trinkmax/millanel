@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, MessageCircle } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { useCart } from "@/lib/cart-store";
@@ -78,7 +79,7 @@ export function AddToCart({ product }: AddToCartProps) {
             target="_blank"
             rel="noreferrer"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon size={16} />
             Consultar
           </a>
         </Button>

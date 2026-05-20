@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { MessageCircle, MapPin } from "lucide-react";
+import {  MapPin } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
 import { SITE } from "@/lib/constants";
@@ -55,7 +56,7 @@ export function EditorialCTA() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <MessageCircle className="h-4 w-4" />
+                  <WhatsAppIcon size={16} />
                   Escribinos por WhatsApp
                 </a>
               </Button>

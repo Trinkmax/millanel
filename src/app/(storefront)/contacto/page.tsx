@@ -4,14 +4,17 @@ import {
   Clock,
   Phone,
   Mail,
-  MessageCircle,
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ContactForm } from "@/components/storefront/contact-form";
 import { SectionHeading } from "@/components/storefront/section-heading";
-import { InstagramIcon, FacebookIcon } from "@/components/brand/social-icons";
+import {
+  InstagramIcon,
+  FacebookIcon,
+  WhatsAppIcon,
+} from "@/components/brand/social-icons";
 import { SITE } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -42,7 +45,7 @@ export default function ContactPage() {
       <section className="container-page pb-16 md:pb-24 grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 space-y-6">
           <ContactCard
-            icon={MessageCircle}
+            icon={WhatsAppIcon}
             title="WhatsApp"
             cta="Abrir chat"
             href={`https://wa.me/${SITE.contact.whatsapp}`}

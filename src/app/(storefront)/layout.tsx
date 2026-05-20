@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { SiteHeader } from "@/components/storefront/site-header";
 import { SiteFooter } from "@/components/storefront/site-footer";
 import { CartDrawer } from "@/components/storefront/cart-drawer";
+import { FloatingWhatsApp } from "@/components/storefront/floating-whatsapp";
 
 export default function StorefrontLayout({
   children,
@@ -18,6 +19,7 @@ export default function StorefrontLayout({
         <SiteFooter />
       </Suspense>
       <CartDrawer />
+      <FloatingWhatsApp />
     </>
   );
 }

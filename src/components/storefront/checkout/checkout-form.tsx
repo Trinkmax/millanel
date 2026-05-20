@@ -7,13 +7,13 @@ import {
   ArrowRight,
   ShieldCheck,
   CreditCard,
-  MessageCircle,
   Banknote,
   Building2,
   MapPin,
   Store,
   AlertCircle,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ const PAYMENT_METHODS: {
     value: "whatsapp",
     label: "Coordinar por WhatsApp",
     description: "Te respondemos con todas las opciones de pago.",
-    icon: MessageCircle,
+    icon: WhatsAppIcon,
   },
   {
     value: "transfer",
