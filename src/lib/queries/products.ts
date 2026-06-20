@@ -33,6 +33,8 @@ export interface ProductListOptions {
   /** Request an exact COUNT (for pagination/totals). Off by default to skip the
    * extra COUNT pass on hot paths like the homepage that never read `.count`. */
   withCount?: boolean;
+  /** Only return products that have at least one photo. */
+  hasImage?: boolean;
 }
 
 async function _getProducts(opts: ProductListOptions): Promise<ProductListResult> {
@@ -44,6 +46,8 @@ async function _getProducts(opts: ProductListOptions): Promise<ProductListResult
       opts.withCount ? { count: "exact" } : undefined,
     )
     .eq("active", true);
+
+  if (opts.hasImage) query = query.eq("has_image", true);
 
   if (opts.categorySlug) {
     const { data: cat, error: catErr } = await supabase
@@ -66,6 +70,9 @@ async function _getProducts(opts: ProductListOptions): Promise<ProductListResult
   if (opts.isNew) query = query.eq("is_new", true);
   if (opts.tag) query = query.contains("tags", [opts.tag]);
   if (opts.promo) query = query.not("promotion", "is", null);
+
+  // Products without a photo always go to the end (regardless of sort).
+  query = query.order("has_image", { ascending: false });
 
   const sort = opts.sort ?? "newest";
   switch (sort) {
@@ -102,7 +109,7 @@ async function _getProducts(opts: ProductListOptions): Promise<ProductListResult
 
 const getProductsCached = unstable_cache(
   (opts: ProductListOptions) => _getProducts(opts),
-  ["products:list"],
+  ["products:list:v2"],
   { tags: ["products"], revalidate: REVALIDATE },
 );
 
@@ -158,6 +165,7 @@ async function _getRelatedProducts(
     .select("*, categories(id, name, slug)")
     .eq("active", true)
     .neq("id", productId)
+    .order("has_image", { ascending: false })
     .limit(limit);
   if (categoryId) query = query.eq("category_id", categoryId);
   const { data, error } = await query;
@@ -216,6 +224,7 @@ async function _getAlternatives(): Promise<AlternativeItem[]> {
     if (sizes.length === 0) continue; // skip roll-ons (single format)
     if (!p.alternativa_a || p.fragrance_number == null) continue;
     const imgs = Array.isArray(p.images) ? (p.images as { path?: string }[]) : [];
+    if (!imgs[0]?.path) continue; // home/showcase: solo alternativas con foto
     const tags = (p.tags ?? []) as string[];
     out.push({
       id: p.id,
@@ -237,7 +246,7 @@ async function _getAlternatives(): Promise<AlternativeItem[]> {
 
 const getAlternativesCached = unstable_cache(
   () => _getAlternatives(),
-  ["products:alternatives"],
+  ["products:alternatives:v2"],
   { tags: ["products"], revalidate: REVALIDATE },
 );
 

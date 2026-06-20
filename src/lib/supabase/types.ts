@@ -145,6 +145,7 @@ export type Database = {
           description: string | null;
           featured: boolean;
           fragrance_number: number | null;
+          has_image: boolean;
           id: string;
           images: Json;
           sizes: Json;

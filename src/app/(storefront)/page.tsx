@@ -20,8 +20,8 @@ export const revalidate = 300; // 5 minutes
 
 export default async function HomePage() {
   const [featured, newest, categories, alternatives] = await Promise.all([
-    getProducts({ featured: true, limit: 8 }),
-    getProducts({ isNew: true, limit: 8 }),
+    getProducts({ featured: true, limit: 8, hasImage: true }),
+    getProducts({ isNew: true, limit: 8, hasImage: true }),
     getCategories({ featured: true }),
     getAlternatives(),
   ]);
