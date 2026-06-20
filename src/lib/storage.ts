@@ -18,6 +18,7 @@ export function publicUrl(
 ): string | null {
   if (!path) return null;
   if (/^https?:\/\//.test(path)) return path;
+  if (path.startsWith("/")) return path;
   const clean = path.replace(/^\/+/, "");
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${clean}`;
 }

@@ -144,7 +144,7 @@ export function ScentQuiz({
   const result = useMemo(
     () =>
       state.phase === "reveal"
-        ? scoreCandidates(candidates, state.answers, { season, limit: 4 })
+        ? scoreCandidates(candidates, state.answers, { season, limit: 3 })
         : null,
     [state.phase, state.answers, candidates, season],
   );
