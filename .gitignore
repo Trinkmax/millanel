@@ -36,8 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
-# downloaded product photos (uploaded to Supabase Storage, not tracked in git)
+# downloaded product photos + generated catalog CSV (live in Supabase, not git)
 /millanel_fotos/
+/millanel_productos.csv
 
 # typescript
 *.tsbuildinfo
