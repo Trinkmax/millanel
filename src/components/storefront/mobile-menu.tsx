@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, MapPin } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, ArrowRight } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -53,6 +53,27 @@ export function MobileMenu({ categories }: MobileMenuProps) {
         </SheetHeader>
 
         <nav className="flex-1 overflow-y-auto px-6 py-6">
+          <Link
+            href="/asesoria"
+            onClick={() => setOpen(false)}
+            className="mb-7 flex items-center justify-between gap-3 rounded-2xl border border-navy-100 bg-pearl px-4 py-3.5 shadow-whisper transition-colors hover:border-navy-300"
+          >
+            <span className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-navy text-cream">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <span>
+                <span className="block font-display text-base leading-tight text-navy-900">
+                  Asesoría de aroma
+                </span>
+                <span className="block text-[11px] text-mute">
+                  Encontrá tu perfume en 45 s
+                </span>
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 text-navy-700" />
+          </Link>
+
           <p className="eyebrow mb-3">Catálogo</p>
           <ul className="flex flex-col gap-0.5">
             <li>

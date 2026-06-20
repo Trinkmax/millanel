@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Product, Category } from "@/lib/supabase/types";
+import type { QuizCandidate, InspiredOption } from "@/lib/asesoria/types";
 
 /**
  * Public product reads. Cookieless + `unstable_cache` (see categories.ts for the
@@ -255,6 +256,81 @@ export async function getAlternatives(): Promise<AlternativeItem[]> {
     return await getAlternativesCached();
   } catch (error) {
     console.error("[alternatives] query error:", error);
+    return [];
+  }
+}
+
+/* ── Asesoría de Aroma (scent-finder quiz) ───────────────────────────────────
+   Lean candidate pool (only perfumes with backfilled scent metadata) + the list
+   of designer originals for the Q2 search. Cookieless + unstable_cache, same
+   `products` tag, so admin writes invalidate them too. */
+
+const QUIZ_FIELDS =
+  "id, slug, code, name, price, sale_price, promotion, is_new, featured, stock, " +
+  "images, sizes, tags, scent_family, scent_subfamily, notes_top, notes_heart, " +
+  "notes_base, intensity_tier, gender_lean, occasion, season, personality_tags, " +
+  "inspired_by_name, inspired_by_brand, categories(id, name, slug)";
+
+async function _getQuizCandidates(): Promise<QuizCandidate[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(QUIZ_FIELDS)
+    .eq("active", true)
+    .not("scent_family", "is", null)
+    .order("has_image", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as QuizCandidate[];
+}
+
+const getQuizCandidatesCached = unstable_cache(
+  () => _getQuizCandidates(),
+  ["products:quiz-candidates:v1"],
+  { tags: ["products"], revalidate: REVALIDATE },
+);
+
+export async function getQuizCandidates(): Promise<QuizCandidate[]> {
+  try {
+    return await getQuizCandidatesCached();
+  } catch (error) {
+    console.error("[quiz-candidates] query error:", error);
+    return [];
+  }
+}
+
+async function _getInspiredByOptions(): Promise<InspiredOption[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("inspired_by_name, inspired_by_brand")
+    .eq("active", true)
+    .not("inspired_by_name", "is", null)
+    .not("scent_family", "is", null);
+  if (error) throw error;
+
+  const map = new Map<string, InspiredOption>();
+  for (const r of data ?? []) {
+    const name = (r.inspired_by_name ?? "").trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    const cur = map.get(key);
+    if (cur) cur.count++;
+    else map.set(key, { name, brand: r.inspired_by_brand ?? null, count: 1 });
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+
+const getInspiredByOptionsCached = unstable_cache(
+  () => _getInspiredByOptions(),
+  ["products:inspired-options:v1"],
+  { tags: ["products"], revalidate: REVALIDATE },
+);
+
+export async function getInspiredByOptions(): Promise<InspiredOption[]> {
+  try {
+    return await getInspiredByOptionsCached();
+  } catch (error) {
+    console.error("[inspired-options] query error:", error);
     return [];
   }
 }

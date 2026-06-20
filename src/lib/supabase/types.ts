@@ -162,6 +162,18 @@ export type Database = {
           stock: number;
           tags: string[];
           track_stock: boolean;
+          scent_family: string | null;
+          scent_subfamily: string | null;
+          notes_top: string[];
+          notes_heart: string[];
+          notes_base: string[];
+          intensity_tier: number | null;
+          gender_lean: string | null;
+          occasion: string[];
+          season: string[];
+          personality_tags: string[];
+          inspired_by_name: string | null;
+          inspired_by_brand: string | null;
           updated_at: string;
         };
         Insert: {
@@ -189,9 +201,47 @@ export type Database = {
           stock?: number;
           tags?: string[];
           track_stock?: boolean;
+          scent_family?: string | null;
+          scent_subfamily?: string | null;
+          notes_top?: string[];
+          notes_heart?: string[];
+          notes_base?: string[];
+          intensity_tier?: number | null;
+          gender_lean?: string | null;
+          occasion?: string[];
+          season?: string[];
+          personality_tags?: string[];
+          inspired_by_name?: string | null;
+          inspired_by_brand?: string | null;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
+        Relationships: [];
+      };
+      quiz_submissions: {
+        Row: {
+          answers: Json;
+          archetype: string | null;
+          consent: boolean;
+          created_at: string;
+          id: string;
+          recommended_product_ids: string[];
+          source: string | null;
+          whatsapp: string | null;
+        };
+        Insert: {
+          answers?: Json;
+          archetype?: string | null;
+          consent?: boolean;
+          created_at?: string;
+          id?: string;
+          recommended_product_ids?: string[];
+          source?: string | null;
+          whatsapp?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["quiz_submissions"]["Insert"]
+        >;
         Relationships: [];
       };
       profiles: {
@@ -300,6 +350,7 @@ export type Enums<T extends keyof Database["public"]["Enums"]> =
 // Convenience type aliases
 export type Product = Tables<"products">;
 export type Category = Tables<"categories">;
+export type QuizSubmission = Tables<"quiz_submissions">;
 export type Order = Tables<"orders">;
 export type OrderItem = Tables<"order_items">;
 export type Profile = Tables<"profiles">;

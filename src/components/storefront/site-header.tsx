@@ -33,7 +33,10 @@ export async function SiteHeader() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 mr-auto">
             <NavLink href="/productos">Catálogo</NavLink>
-            {categories.slice(0, 4).map((c) => (
+            <NavLink href="/asesoria" accent>
+              Asesoría
+            </NavLink>
+            {categories.slice(0, 3).map((c) => (
               <NavLink key={c.slug} href={`/categorias/${c.slug}`}>
                 {c.name}
               </NavLink>
@@ -59,13 +62,28 @@ export async function SiteHeader() {
   );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  children,
+  accent = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  accent?: boolean;
+}) {
   return (
     <Link
       href={href}
-      className="px-3 py-2 text-sm font-medium text-navy-900 hover:text-navy-500 transition-colors relative group"
+      className={`px-3 py-2 text-sm font-medium transition-colors relative group ${
+        accent ? "text-navy-700 hover:text-navy" : "text-navy-900 hover:text-navy-500"
+      }`}
     >
-      {children}
+      <span className="inline-flex items-center gap-1.5">
+        {accent && (
+          <span className="h-1.5 w-1.5 rounded-full bg-blush-400" aria-hidden />
+        )}
+        {children}
+      </span>
       <span className="absolute inset-x-3 -bottom-0.5 h-[1.5px] bg-navy origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" />
     </Link>
   );

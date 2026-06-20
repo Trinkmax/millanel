@@ -7,6 +7,7 @@ import { EditorialCTA } from "@/components/storefront/home/editorial-cta";
 import { SectionHeading } from "@/components/storefront/section-heading";
 import { ProductCard } from "@/components/storefront/product-card";
 import { AlternativasShowcase } from "@/components/storefront/home/alternativas-showcase";
+import { AdvisorTeaser } from "@/components/storefront/home/advisor-teaser";
 import { getProducts, getAlternatives } from "@/lib/queries/products";
 import { getCategories } from "@/lib/queries/categories";
 
@@ -30,6 +31,9 @@ export default async function HomePage() {
     <div className="paper-grain">
       <Hero />
       <ValueStrip />
+
+      {/* Asesoría de aroma — guided scent-finder entry point */}
+      <AdvisorTeaser />
 
       {/* Featured products */}
       <section className="container-page py-20 md:py-28">
