@@ -407,6 +407,9 @@ export function CheckoutForm({ shippingZones, mercadopagoEnabled }: CheckoutForm
                 </span>
                 <span className="flex-1 text-navy-900/85 leading-snug line-clamp-2">
                   {item.name}
+                  {item.size ? (
+                    <span className="text-mute"> · {item.size}</span>
+                  ) : null}
                 </span>
                 <span className="num-display text-navy font-medium shrink-0">
                   {formatPrice((item.salePrice ?? item.price) * item.quantity)}

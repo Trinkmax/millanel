@@ -5,6 +5,8 @@ import { ChevronRight, Sparkles, Tag, Truck, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductImage } from "@/components/storefront/product-image";
+import { publicUrl } from "@/lib/storage";
+import { parseSizes, minSizePrice } from "@/lib/variants";
 import { ProductCard } from "@/components/storefront/product-card";
 import { AddToCart } from "@/components/storefront/product/add-to-cart";
 import { SectionHeading } from "@/components/storefront/section-heading";
@@ -44,10 +46,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const related = await getRelatedProducts(product.id, product.category_id, 4);
   const image = firstImage(product.images);
-  const discount = product.sale_price
-    ? formatDiscount(product.price, product.sale_price)
-    : null;
-  const isOutOfPrice = product.price === 0;
+  const sizes = parseSizes(product.sizes);
+  const hasSizes = sizes.length > 0;
+  const fromPrice = hasSizes ? minSizePrice(sizes) : product.price;
+  const discount =
+    !hasSizes && product.sale_price
+      ? formatDiscount(product.price, product.sale_price)
+      : null;
+  const isOutOfPrice = (hasSizes ? fromPrice : product.price) === 0;
 
   return (
     <article>
@@ -85,7 +91,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <div className="lg:sticky lg:top-28">
             <div className="relative rounded-2xl overflow-hidden">
               <ProductImage
-                src={image}
+                src={publicUrl(image)}
                 alt={product.name}
                 seed={product.id}
                 aspect="square"
@@ -121,6 +127,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   Código {product.code}
                 </p>
               )}
+              {product.alternativa_a && (
+                <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-navy-200 bg-sky-50 px-3 py-1 text-xs text-navy-800">
+                  <Sparkles className="h-3 w-3 text-navy-500" />
+                  Alternativa a:{" "}
+                  <span className="font-medium">
+                    {product.alternativa_a}
+                    {product.alternativa_marca
+                      ? ` de ${product.alternativa_marca}`
+                      : ""}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Price */}
@@ -128,6 +146,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {isOutOfPrice ? (
                 <span className="font-display text-3xl italic text-mute">
                   Consultá disponibilidad
+                </span>
+              ) : hasSizes ? (
+                <span className="font-display text-2xl text-navy-700">
+                  Desde{" "}
+                  <span className="num-display text-navy">
+                    {formatPrice(fromPrice)}
+                  </span>
                 </span>
               ) : product.sale_price ? (
                 <>

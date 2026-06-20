@@ -54,6 +54,7 @@ export type Database = {
           quantity: number;
           total: number;
           unit_price: number;
+          variant_label: string | null;
         };
         Insert: {
           created_at?: string;
@@ -66,6 +67,7 @@ export type Database = {
           quantity: number;
           total: number;
           unit_price: number;
+          variant_label?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["order_items"]["Insert"]>;
         Relationships: [];
@@ -135,13 +137,17 @@ export type Database = {
       products: {
         Row: {
           active: boolean;
+          alternativa_a: string | null;
+          alternativa_marca: string | null;
           category_id: string | null;
           code: string | null;
           created_at: string;
           description: string | null;
           featured: boolean;
+          fragrance_number: number | null;
           id: string;
           images: Json;
+          sizes: Json;
           is_new: boolean;
           name: string;
           price: number;
@@ -159,13 +165,17 @@ export type Database = {
         };
         Insert: {
           active?: boolean;
+          alternativa_a?: string | null;
+          alternativa_marca?: string | null;
           category_id?: string | null;
           code?: string | null;
           created_at?: string;
           description?: string | null;
           featured?: boolean;
+          fragrance_number?: number | null;
           id?: string;
           images?: Json;
+          sizes?: Json;
           is_new?: boolean;
           name: string;
           price: number;

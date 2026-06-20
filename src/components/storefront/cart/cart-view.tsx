@@ -98,6 +98,11 @@ export function CartView() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                  {item.size && (
+                    <p className="text-xs font-medium text-navy-700 mt-1">
+                      {item.size}
+                    </p>
+                  )}
                   {item.code && (
                     <p className="text-[11px] uppercase tracking-wider text-mute-soft mt-1">
                       COD {item.code}

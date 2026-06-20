@@ -9,7 +9,13 @@ import {
   Trash2,
   AlertCircle,
   Eye,
+  Plus,
+  X,
+  Sparkles,
+  FlaskConical,
+  Layers,
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +38,8 @@ import {
   type ProductFormInput,
 } from "@/lib/actions/admin";
 import type { Category, Product } from "@/lib/supabase/types";
+import { parseSizes, effectivePrice, minSizePrice } from "@/lib/variants";
+import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
 
 interface ProductFormProps {
@@ -62,6 +70,10 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     active: product?.active ?? true,
     tags: product?.tags ?? [],
     images: ((product?.images ?? []) as unknown as ImageItem[]).filter(Boolean),
+    sizes: parseSizes(product?.sizes),
+    fragrance_number: product?.fragrance_number ?? null,
+    alternativa_a: product?.alternativa_a ?? null,
+    alternativa_marca: product?.alternativa_marca ?? null,
   });
   const [tagInput, setTagInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +82,40 @@ export function ProductForm({ product, categories }: ProductFormProps) {
   function update<K extends keyof ProductFormInput>(key: K, value: ProductFormInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  // ── Olfactory-alternative metadata ──────────────────────────────────────
+  const [isAlt, setIsAlt] = useState(
+    !!product?.alternativa_a || product?.fragrance_number != null,
+  );
+  function toggleAlt(v: boolean) {
+    setIsAlt(v);
+    if (!v) {
+      setForm((f) => ({
+        ...f,
+        alternativa_a: null,
+        alternativa_marca: null,
+        fragrance_number: null,
+      }));
+    }
+  }
+
+  // ── Size variants ───────────────────────────────────────────────────────
+  const sizes = form.sizes ?? [];
+  const setSizes = (next: ProductFormInput["sizes"]) => update("sizes", next);
+  const addSize = () =>
+    setSizes([...sizes, { ml: 0, label: "", price: 0, sale_price: null }]);
+  const removeSize = (i: number) =>
+    setSizes(sizes.filter((_, idx) => idx !== i));
+  const updateSize = (
+    i: number,
+    patch: Partial<ProductFormInput["sizes"][number]>,
+  ) => setSizes(sizes.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  const applyPreset = () =>
+    setSizes([
+      { ml: 30, label: "30 ml", price: 10499.99, sale_price: null },
+      { ml: 60, label: "60 ml", price: 14499.99, sale_price: null },
+      { ml: 100, label: "100 ml", price: 17999.99, sale_price: null },
+    ]);
 
   function addTag() {
     const t = tagInput.trim().toLowerCase();
@@ -87,10 +133,17 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
   function onSave() {
     setError(null);
+    // Drop half-filled size rows and default any empty labels before saving.
+    const payload: ProductFormInput = {
+      ...form,
+      sizes: (form.sizes ?? [])
+        .filter((s) => s.ml > 0 && s.price > 0)
+        .map((s) => ({ ...s, label: s.label || `${s.ml} ml` })),
+    };
     startTransition(async () => {
       const result = isEdit
-        ? await updateProduct(product.id, form)
-        : await createProduct(form);
+        ? await updateProduct(product.id, payload)
+        : await createProduct(payload);
       if (!result.ok) {
         setError(result.error);
         toast.error("Error", { description: result.error });
@@ -292,6 +345,239 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                   placeholder="Llevá 2 a $X c/u..."
                 />
               </FormField>
+            </CardContent>
+          </Card>
+
+          {/* Tamaños y variantes */}
+          <Card>
+            <CardContent className="p-6 !pt-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl text-navy-900 flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-navy-500" />
+                    Tamaños y variantes
+                  </h2>
+                  <p className="text-xs text-mute mt-1 max-w-md">
+                    Cargá tamaños y el cliente elige cuál comprar (ideal para las
+                    alternativas: 30 / 60 / 100&nbsp;ml). Si lo dejás vacío, se usa el
+                    PVP de arriba.
+                  </p>
+                </div>
+                {sizes.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={applyPreset}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-navy-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-navy-800 hover:bg-sky-100 active:scale-95 transition-all"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Cargar 30 · 60 · 100
+                  </button>
+                )}
+              </div>
+
+              {sizes.length > 0 && (
+                <div className="space-y-2">
+                  <div className="hidden md:grid grid-cols-[88px_1fr_130px_130px_36px] gap-2 px-1 text-[10px] uppercase tracking-wider text-mute-soft">
+                    <span>ml</span>
+                    <span>Etiqueta</span>
+                    <span>Precio</span>
+                    <span>Oferta</span>
+                    <span />
+                  </div>
+                  {sizes.map((s, i) => (
+                    <motion.div
+                      key={i}
+                      layout
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      className="grid grid-cols-2 md:grid-cols-[88px_1fr_130px_130px_36px] gap-2 items-center rounded-xl border border-line bg-cream-50 p-2"
+                    >
+                      <Input
+                        type="number"
+                        value={s.ml || ""}
+                        placeholder="60"
+                        onChange={(e) => {
+                          const ml = parseInt(e.target.value) || 0;
+                          const auto = !s.label || s.label === `${s.ml} ml`;
+                          updateSize(i, {
+                            ml,
+                            ...(auto ? { label: ml ? `${ml} ml` : "" } : {}),
+                          });
+                        }}
+                      />
+                      <Input
+                        value={s.label}
+                        placeholder="60 ml"
+                        onChange={(e) => updateSize(i, { label: e.target.value })}
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={s.price || ""}
+                        placeholder="14499.99"
+                        onChange={(e) =>
+                          updateSize(i, { price: parseFloat(e.target.value) || 0 })
+                        }
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={s.sale_price ?? ""}
+                        placeholder="—"
+                        onChange={(e) =>
+                          updateSize(i, {
+                            sale_price: e.target.value
+                              ? parseFloat(e.target.value)
+                              : null,
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSize(i)}
+                        aria-label="Quitar tamaño"
+                        className="grid place-items-center h-9 w-9 rounded-lg text-mute hover:text-destructive hover:bg-destructive/10 transition-colors justify-self-end"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={addSize}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-navy-700 hover:text-navy transition-colors"
+                >
+                  <Plus className="h-4 w-4" /> Agregar tamaño
+                </button>
+                {sizes.length > 0 && (
+                  <p className="text-sm">
+                    <span className="text-mute">En la tienda: </span>
+                    <span className="font-display text-navy">
+                      Desde {formatPrice(minSizePrice(sizes))}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Live preview of the storefront size selector */}
+              {sizes.length > 0 && (
+                <div className="rounded-xl bg-navy-900/[0.03] border border-line p-3">
+                  <p className="eyebrow text-mute mb-2">Vista previa del selector</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[...sizes]
+                      .sort((a, b) => a.ml - b.ml)
+                      .map((s, i) => (
+                        <div
+                          key={i}
+                          className={
+                            "flex flex-col items-start rounded-xl border px-3 py-1.5 " +
+                            (i === 0
+                              ? "border-navy bg-navy text-cream"
+                              : "border-line bg-pearl text-navy-900")
+                          }
+                        >
+                          <span className="text-xs font-medium leading-none">
+                            {s.label || `${s.ml} ml`}
+                          </span>
+                          <span
+                            className={
+                              "num-display text-[10px] mt-1 " +
+                              (i === 0 ? "text-cream/80" : "text-mute")
+                            }
+                          >
+                            {formatPrice(effectivePrice(s))}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Alternativa olfativa */}
+          <Card>
+            <CardContent className="p-6 !pt-6 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-xl text-navy-900 flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-navy-500" />
+                  Alternativa olfativa
+                </h2>
+                <Switch checked={isAlt} onCheckedChange={toggleAlt} />
+              </div>
+              <AnimatePresence initial={false}>
+                {isAlt ? (
+                  <motion.div
+                    key="alt-fields"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-4 pt-1">
+                      <div className="grid grid-cols-[96px_1fr] gap-3">
+                        <FormField label="N°" hint="número">
+                          <Input
+                            type="number"
+                            value={form.fragrance_number ?? ""}
+                            placeholder="62"
+                            onChange={(e) =>
+                              update(
+                                "fragrance_number",
+                                e.target.value ? parseInt(e.target.value) : null,
+                              )
+                            }
+                          />
+                        </FormField>
+                        <FormField label="Marca / casa">
+                          <Input
+                            value={form.alternativa_marca ?? ""}
+                            placeholder="Kenzo"
+                            onChange={(e) =>
+                              update("alternativa_marca", e.target.value || null)
+                            }
+                          />
+                        </FormField>
+                      </div>
+                      <FormField label="Perfume original">
+                        <Input
+                          value={form.alternativa_a ?? ""}
+                          placeholder="Flower"
+                          onChange={(e) =>
+                            update("alternativa_a", e.target.value || null)
+                          }
+                        />
+                      </FormField>
+                      <div>
+                        <p className="eyebrow text-mute mb-2">
+                          Se mostrará así en la tienda
+                        </p>
+                        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-navy-200 bg-sky-50 px-3 py-1 text-xs text-navy-800">
+                          <Sparkles className="h-3 w-3 text-navy-500" />
+                          Alternativa a:{" "}
+                          <span className="font-medium">
+                            {form.alternativa_a || "Perfume"}
+                            {form.alternativa_marca
+                              ? ` de ${form.alternativa_marca}`
+                              : ""}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <p className="text-xs text-mute">
+                    Activá si este producto es una alternativa olfativa a un perfume
+                    de diseñador.
+                  </p>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
         </div>

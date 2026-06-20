@@ -46,6 +46,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       sort: (sp.sort as "newest") ?? "newest",
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
+      withCount: true,
     }),
   ]);
 

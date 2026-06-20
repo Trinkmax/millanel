@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
 import { CheckoutInputSchema, type CheckoutInput } from "@/lib/schemas/orders";
+import { parseSizes, effectivePrice } from "@/lib/variants";
 
 export type { CheckoutInput } from "@/lib/schemas/orders";
 
@@ -38,10 +40,13 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
   const data = parsed.data;
 
-  const supabase = await createClient();
+  // Trusted server action: prices are verified server-side and the input is
+  // Zod-validated, so we use the service-role client (like the MP webhook).
+  // orders/order_items are admin-only under RLS; guests never touch them directly.
+  const supabase = createAdminClient();
 
   // 1. Verify prices server-side
-  const ids = data.items.map((i) => i.id);
+  const ids = data.items.map((i) => i.productId ?? i.id);
   const { data: priceRows, error: priceError } = await (supabase.rpc as unknown as (
     name: string,
     args: Record<string, unknown>,
@@ -58,6 +63,16 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     priceMap.set(row.id, row);
   }
 
+  // Variant sizes, for per-size price verification (service-role read).
+  const sizesMap = new Map<string, unknown>();
+  const { data: sizeRows } = await supabase
+    .from("products")
+    .select("id, sizes")
+    .in("id", ids);
+  for (const r of sizeRows ?? []) {
+    sizesMap.set(r.id, (r as { sizes?: unknown }).sizes);
+  }
+
   let subtotal = 0;
   const checkedItems: {
     product_id: string;
@@ -67,17 +82,38 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     unit_price: number;
     quantity: number;
     total: number;
+    variant_label: string | null;
   }[] = [];
 
   for (const item of data.items) {
-    const row = priceMap.get(item.id);
+    const pid = item.productId ?? item.id;
+    const row = priceMap.get(pid);
     if (!row || !row.active) {
       return {
         ok: false,
         error: `El producto "${item.name}" ya no está disponible. Quitalo y volvé a intentar.`,
       };
     }
-    const unitPrice = Number(row.sale_price ?? row.price);
+
+    // Per-size pricing: variant products are re-priced against products.sizes
+    // (never trust the client's price). Non-variant products use price/sale_price.
+    const sizes = parseSizes(sizesMap.get(pid));
+    let unitPrice: number;
+    let variantLabel: string | null = null;
+    let displayName = row.name;
+    if (sizes.length > 0) {
+      const variant =
+        item.sizeMl != null ? sizes.find((s) => s.ml === item.sizeMl) : undefined;
+      if (!variant) {
+        return { ok: false, error: `Elegí un tamaño para "${row.name}".` };
+      }
+      unitPrice = Number(effectivePrice(variant));
+      variantLabel = variant.label;
+      displayName = `${row.name} — ${variant.label}`;
+    } else {
+      unitPrice = Number(row.sale_price ?? row.price);
+    }
+
     if (unitPrice <= 0) {
       return {
         ok: false,
@@ -88,12 +124,13 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     subtotal += lineTotal;
     checkedItems.push({
       product_id: row.id,
-      product_name: row.name,
+      product_name: displayName,
       product_code: row.code,
       product_image: item.image ?? null,
       unit_price: unitPrice,
       quantity: item.quantity,
       total: lineTotal,
+      variant_label: variantLabel,
     });
   }
 

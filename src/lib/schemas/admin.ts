@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const ProductImage = z.object({ path: z.string(), alt: z.string().optional() });
 
+const ProductSizeSchema = z.object({
+  ml: z.number().int().positive(),
+  label: z.string(),
+  price: z.number().nonnegative(),
+  sale_price: z.number().nullable().optional(),
+});
+
 export const ProductFormSchema = z.object({
   name: z.string().min(2),
   code: z.string().nullable().optional(),
@@ -21,6 +28,12 @@ export const ProductFormSchema = z.object({
   active: z.boolean(),
   tags: z.array(z.string()),
   images: z.array(ProductImage),
+  // Size variants (perfume alternatives: 30/60/100 ml). Empty = single price.
+  sizes: z.array(ProductSizeSchema).default([]),
+  // Olfactory alternative metadata.
+  fragrance_number: z.number().int().nullable().optional(),
+  alternativa_a: z.string().nullable().optional(),
+  alternativa_marca: z.string().nullable().optional(),
 });
 
 export type ProductFormInput = z.infer<typeof ProductFormSchema>;

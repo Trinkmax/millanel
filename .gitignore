@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# downloaded product photos (uploaded to Supabase Storage, not tracked in git)
+/millanel_fotos/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

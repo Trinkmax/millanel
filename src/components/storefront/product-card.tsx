@@ -5,6 +5,8 @@ import { motion } from "motion/react";
 import { ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProductImage } from "@/components/storefront/product-image";
+import { publicUrl } from "@/lib/storage";
+import { parseSizes, minSizePrice } from "@/lib/variants";
 import { useCart } from "@/lib/cart-store";
 import { formatPrice, formatDiscount } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,7 @@ interface ProductCardProps {
     price: number;
     sale_price?: number | null;
     images?: unknown;
+    sizes?: unknown;
     promotion?: string | null;
     is_new?: boolean;
     featured?: boolean;
@@ -48,10 +51,14 @@ export function ProductCard({
 }: ProductCardProps) {
   const add = useCart((s) => s.add);
   const image = firstImage(product.images);
-  const discount = product.sale_price
-    ? formatDiscount(product.price, product.sale_price)
-    : null;
-  const isOutOfPrice = product.price === 0;
+  const sizes = parseSizes(product.sizes);
+  const hasSizes = sizes.length > 0;
+  const fromPrice = hasSizes ? minSizePrice(sizes) : product.price;
+  const discount =
+    !hasSizes && product.sale_price
+      ? formatDiscount(product.price, product.sale_price)
+      : null;
+  const isOutOfPrice = (hasSizes ? fromPrice : product.price) === 0;
 
   function onAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -60,14 +67,18 @@ export function ProductCard({
       toast.info("Consultá disponibilidad de este producto.");
       return;
     }
+    const v = hasSizes ? sizes[0] : null;
     add({
-      id: product.id,
+      id: v ? `${product.id}::${v.ml}` : product.id,
+      productId: product.id,
       slug: product.slug,
       code: product.code,
       name: product.name,
-      price: product.price,
-      salePrice: product.sale_price ?? null,
-      image,
+      size: v?.label ?? null,
+      sizeMl: v?.ml ?? null,
+      price: v ? v.price : product.price,
+      salePrice: v ? (v.sale_price ?? null) : (product.sale_price ?? null),
+      image: publicUrl(image),
     });
     toast.success("Sumado al carrito", {
       description: product.name,
@@ -93,7 +104,7 @@ export function ProductCard({
       >
         <div className="relative overflow-hidden rounded-[6px] bg-pearl shadow-whisper transition-shadow duration-500 group-hover:shadow-medium">
           <ProductImage
-            src={image}
+            src={publicUrl(image)}
             alt={product.name}
             seed={product.id}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 22vw"
@@ -138,6 +149,10 @@ export function ProductCard({
           <div className="mt-1.5 flex items-baseline gap-2">
             {isOutOfPrice ? (
               <span className="text-sm text-mute italic">Consultar</span>
+            ) : hasSizes ? (
+              <span className="text-base font-medium text-navy num-display">
+                Desde {formatPrice(fromPrice)}
+              </span>
             ) : product.sale_price ? (
               <>
                 <span className="text-base font-medium text-navy num-display">

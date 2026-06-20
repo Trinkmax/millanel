@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import {
@@ -50,6 +50,7 @@ export async function createProduct(input: ProductFormInput) {
   }
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
+  revalidateTag("products", "max");
   return { ok: true as const, id: data.id };
 }
 
@@ -72,6 +73,7 @@ export async function updateProduct(id: string, input: ProductFormInput) {
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
   revalidatePath(`/productos/${slug}`);
+  revalidateTag("products", "max");
   return { ok: true as const };
 }
 
@@ -81,6 +83,7 @@ export async function deleteProduct(id: string) {
   if (error) return { ok: false as const, error: error.message };
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
+  revalidateTag("products", "max");
   return { ok: true as const };
 }
 
@@ -89,6 +92,7 @@ export async function toggleProductActive(id: string, active: boolean) {
   await supabase.from("products").update({ active }).eq("id", id);
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
+  revalidateTag("products", "max");
 }
 
 /* ── CATEGORIES ────────────────────────────────────────────── */
@@ -119,6 +123,7 @@ export async function upsertCategory(
   }
   revalidatePath("/admin/categorias");
   revalidatePath("/");
+  revalidateTag("categories", "max");
   return { ok: true, id };
 }
 
@@ -127,6 +132,8 @@ export async function deleteCategory(id: string) {
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) return { ok: false as const, error: error.message };
   revalidatePath("/admin/categorias");
+  revalidatePath("/");
+  revalidateTag("categories", "max");
   return { ok: true as const };
 }
 
@@ -210,6 +217,7 @@ export async function upsertShippingZone(
     if (error) return { ok: false as const, error: error.message };
   }
   revalidatePath("/admin/envios");
+  revalidateTag("shipping", "max");
   return { ok: true as const };
 }
 
@@ -218,6 +226,7 @@ export async function deleteShippingZone(id: string) {
   const { error } = await supabase.from("shipping_zones").delete().eq("id", id);
   if (error) return { ok: false as const, error: error.message };
   revalidatePath("/admin/envios");
+  revalidateTag("shipping", "max");
   return { ok: true as const };
 }
 
@@ -231,5 +240,6 @@ export async function updateSetting(key: string, value: unknown) {
   if (error) return { ok: false as const, error: error.message };
   revalidatePath("/admin/ajustes");
   revalidatePath("/", "layout");
+  revalidateTag("settings", "max");
   return { ok: true as const };
 }

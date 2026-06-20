@@ -1,10 +1,16 @@
 import { z } from "zod";
 
 const CartItemSchema = z.object({
-  id: z.string().uuid(),
+  // Cart-line key (may be composite "uuid::ml"); not necessarily a bare uuid.
+  id: z.string(),
+  // Real product id used for server-side price verification. Optional for
+  // backwards-compat with carts persisted before variants existed (falls back to id).
+  productId: z.string().uuid().optional(),
   slug: z.string(),
   code: z.string().nullable(),
   name: z.string(),
+  size: z.string().nullable().optional(),
+  sizeMl: z.number().int().positive().nullable().optional(),
   price: z.number().nonnegative(),
   salePrice: z.number().nullable().optional(),
   image: z.string().nullable().optional(),

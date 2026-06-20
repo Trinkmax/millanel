@@ -6,7 +6,8 @@ import { BrandStory } from "@/components/storefront/home/brand-story";
 import { EditorialCTA } from "@/components/storefront/home/editorial-cta";
 import { SectionHeading } from "@/components/storefront/section-heading";
 import { ProductCard } from "@/components/storefront/product-card";
-import { getProducts } from "@/lib/queries/products";
+import { AlternativasShowcase } from "@/components/storefront/home/alternativas-showcase";
+import { getProducts, getAlternatives } from "@/lib/queries/products";
 import { getCategories } from "@/lib/queries/categories";
 
 export const metadata: Metadata = {
@@ -18,10 +19,11 @@ export const metadata: Metadata = {
 export const revalidate = 300; // 5 minutes
 
 export default async function HomePage() {
-  const [featured, newest, categories] = await Promise.all([
+  const [featured, newest, categories, alternatives] = await Promise.all([
     getProducts({ featured: true, limit: 8 }),
     getProducts({ isNew: true, limit: 8 }),
     getCategories({ featured: true }),
+    getAlternatives(),
   ]);
 
   return (
@@ -48,6 +50,11 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Alternativas — interactive finder (conversion) */}
+      {alternatives.length > 0 && (
+        <AlternativasShowcase alternatives={alternatives} />
+      )}
 
       {/* Categories */}
       <section className="container-page py-20 md:py-28 border-t border-line">

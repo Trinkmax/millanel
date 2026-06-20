@@ -112,7 +112,7 @@ export default async function AdminProductsList({ searchParams }: PageProps) {
                     <div className="relative h-12 w-12 overflow-hidden rounded-md bg-cream-100">
                       {firstImg ? (
                         <Image
-                          src={publicUrl(firstImg.path)}
+                          src={publicUrl(firstImg.path)!}
                           alt={p.name}
                           fill
                           sizes="48px"

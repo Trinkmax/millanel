@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Category } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
+import { publicUrl } from "@/lib/storage";
 
 interface CategoriesGridProps {
   categories: Category[];
@@ -240,7 +241,7 @@ function CategoryCard({
           {category.image_path ? (
             <>
               <Image
-                src={category.image_path}
+                src={publicUrl(category.image_path, "category-images")!}
                 alt={category.name}
                 fill
                 sizes="(max-width: 640px) 82vw, (max-width: 768px) 58vw, (max-width: 1024px) 44vw, 30vw"

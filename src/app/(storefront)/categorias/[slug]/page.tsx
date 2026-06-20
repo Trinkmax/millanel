@@ -53,6 +53,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       sort: (sp.sort as "newest") ?? "newest",
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
+      withCount: true,
     }),
   ]);
 

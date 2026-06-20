@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
+// Live Supabase project host for next/image remotePatterns.
+// Derive from env; the fallback must point at the LIVE project, never the
+// abandoned `tfwrpjabiucopmhuyydi` ref (its DNS no longer resolves → broken images).
 const supabaseHost =
   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/^https?:\/\//, "") ??
-  "tfwrpjabiucopmhuyydi.supabase.co";
+  "jlrbwuxjwsbudrhcodlm.supabase.co";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,

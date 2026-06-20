@@ -4,10 +4,17 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export interface CartItem {
+  /** Cart-line key: the product id, or `${productId}::${sizeMl}` for a sized variant. */
   id: string;
+  /** Real product UUID — used for server-side price verification at checkout. */
+  productId: string;
   slug: string;
   code: string | null;
   name: string;
+  /** Selected size label, e.g. "60 ml" (only for variant products). */
+  size?: string | null;
+  /** Selected size in ml — the variant key the server re-prices against. */
+  sizeMl?: number | null;
   price: number;
   salePrice?: number | null;
   image?: string | null;

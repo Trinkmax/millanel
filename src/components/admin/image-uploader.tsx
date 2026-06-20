@@ -7,6 +7,7 @@ import { Upload, X, GripVertical, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { publicUrl } from "@/lib/storage";
 
 export interface ImageItem {
   path: string;
@@ -21,12 +22,9 @@ interface ImageUploaderProps {
   max?: number;
 }
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-export function publicUrl(path: string, bucket = "product-images") {
-  if (path.startsWith("http")) return path;
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
-}
+// Re-exported so existing `from "@/components/admin/image-uploader"` imports
+// keep working; the implementation lives in @/lib/storage (server+client safe).
+export { publicUrl };
 
 export function ImageUploader({
   value,
@@ -111,7 +109,7 @@ export function ImageUploader({
               className="group relative aspect-square rounded-lg overflow-hidden border border-line bg-cream-50"
             >
               <Image
-                src={publicUrl(img.path, bucket)}
+                src={publicUrl(img.path, bucket)!}
                 alt={img.alt ?? `Imagen ${idx + 1}`}
                 fill
                 sizes="200px"

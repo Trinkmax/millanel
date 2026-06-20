@@ -109,6 +109,11 @@ export function CartDrawer() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
+                        {item.size && (
+                          <p className="text-[11px] font-medium text-navy-700 mt-0.5">
+                            {item.size}
+                          </p>
+                        )}
                         {item.code && (
                           <p className="text-[11px] uppercase tracking-wider text-mute-soft mt-0.5">
                             COD {item.code}
