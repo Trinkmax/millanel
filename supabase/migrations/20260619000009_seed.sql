@@ -7,24 +7,28 @@
 -- WhatsApp checkout path in lib/actions/orders.ts.
 -- ============================================================================
 
-insert into public.categories (slug, name, sort_order, featured) values
-  ('perfumes-mujer',       'Perfumes Mujer',        1,  true),
-  ('perfumes-hombre',      'Perfumes Hombre',       2,  true),
-  ('perfumes-infantiles',  'Perfumes Infantiles',   3,  false),
-  ('maquillaje',           'Maquillaje',            4,  true),
-  ('cuidado-facial',       'Cuidado Facial',        5,  true),
-  ('cuidado-corporal',     'Cuidado Corporal',      6,  false),
-  ('cabello',              'Cabello',               7,  true),
-  ('manos-y-pies',         'Manos y Pies',          8,  false),
-  ('boxes-sets',           'Boxes & Sets',          9,  true),
-  ('hogar-y-aromas',       'Hogar y Aromas',        10, false),
-  ('mate-y-cocina',        'Mate y Cocina',         11, false),
-  ('indumentaria',         'Indumentaria',          12, false),
-  ('accesorios',           'Accesorios',            13, false),
-  ('barber-shop',          'Barber Shop',           14, false),
-  ('merchandising',        'Merchandising',         15, false),
-  ('outlet',               'Outlet',                16, true)
-on conflict (slug) do nothing;
+insert into public.categories (slug, name, sort_order, featured, image_path) values
+  ('perfumes-mujer',       'Perfumes Mujer',        1,  true,  '/images/categories/perfumes-mujer.png'),
+  ('perfumes-hombre',      'Perfumes Hombre',       2,  true,  '/images/categories/perfumes-hombre.png'),
+  ('perfumes-infantiles',  'Perfumes Infantiles',   3,  false, null),
+  ('maquillaje',           'Maquillaje',            4,  true,  '/images/categories/maquillaje.png'),
+  ('cuidado-facial',       'Cuidado Facial',        5,  true,  '/images/categories/cuidado-facial.png'),
+  ('cuidado-corporal',     'Cuidado Corporal',      6,  false, null),
+  ('cabello',              'Cabello',               7,  true,  '/images/categories/cabello.png'),
+  ('manos-y-pies',         'Manos y Pies',          8,  false, null),
+  ('boxes-sets',           'Boxes & Sets',          9,  true,  '/images/categories/boxes-sets.png'),
+  ('hogar-y-aromas',       'Hogar y Aromas',        10, false, null),
+  ('mate-y-cocina',        'Mate y Cocina',         11, false, null),
+  ('indumentaria',         'Indumentaria',          12, false, null),
+  ('accesorios',           'Accesorios',            13, false, null),
+  ('barber-shop',          'Barber Shop',           14, false, null),
+  ('merchandising',        'Merchandising',         15, false, null),
+  ('outlet',               'Outlet',                16, true,  '/images/categories/outlet.png')
+on conflict (slug) do update set
+  name = excluded.name,
+  sort_order = excluded.sort_order,
+  featured = excluded.featured,
+  image_path = excluded.image_path;
 
 insert into public.settings (key, value) values
   ('contact', jsonb_build_object(

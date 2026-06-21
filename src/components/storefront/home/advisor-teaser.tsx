@@ -79,68 +79,90 @@ export function AdvisorTeaser() {
             </motion.div>
           </div>
 
-          {/* Visual — floating family pills */}
+          {/* Visual — Image with overlaid floating family pills */}
           <div className="relative">
             <motion.div
               initial={reduce ? false : { opacity: 0, scale: 0.96 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.7, ease: EASE_OUT_SOFT, delay: 0.1 }}
-              className="relative mx-auto flex max-w-sm flex-wrap items-center justify-center gap-3"
+              className="relative mx-auto aspect-[4/3] md:aspect-[3/4] w-full max-w-md overflow-hidden rounded-[24px] shadow-medium border border-line"
             >
-              {FAMILY_CHOICES.map((key, i) => {
-                const meta = FAMILY_META[key];
-                const Icon = quizIcon(meta.icon);
-                return (
-                  <motion.span
-                    key={key}
-                    animate={
-                      reduce
-                        ? undefined
-                        : { y: [0, i % 2 === 0 ? -6 : 6, 0] }
-                    }
-                    transition={
-                      reduce
-                        ? undefined
-                        : {
-                            duration: 6 + i,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: i * 0.3,
-                          }
-                    }
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-full border border-line bg-pearl/90 px-4 py-2.5 text-sm font-medium text-navy-800 shadow-whisper backdrop-blur-sm",
-                    )}
-                  >
-                    <span
+              {/* The gorgeous teaser image */}
+              <img
+                src="/images/asesoria/advisor-teaser.png"
+                alt="Encontrá tu perfume ideal"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-950/45 via-transparent to-transparent pointer-events-none" />
+
+              {/* Absolute positioned floating family pills */}
+              <div className="absolute inset-0 p-6 pointer-events-none">
+                {FAMILY_CHOICES.map((key, i) => {
+                  const meta = FAMILY_META[key];
+                  const Icon = quizIcon(meta.icon);
+
+                  // Coordinate positions to scatter them nicely over the image
+                  const positions = [
+                    "top-[12%] left-[8%]",
+                    "top-[28%] right-[8%]",
+                    "top-[46%] left-[6%]",
+                    "bottom-[36%] right-[8%]",
+                    "bottom-[20%] left-[12%]",
+                  ];
+
+                  return (
+                    <motion.span
+                      key={key}
+                      animate={
+                        reduce
+                          ? undefined
+                          : { y: [0, i % 2 === 0 ? -5 : 5, 0] }
+                      }
+                      transition={
+                        reduce
+                          ? undefined
+                          : {
+                              duration: 5 + i,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                              delay: i * 0.25,
+                            }
+                      }
                       className={cn(
-                        "grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br",
-                        meta.gradient,
+                        "absolute inline-flex items-center gap-1.5 rounded-full border border-line bg-pearl/90 px-3 py-2 text-xs font-semibold text-navy shadow-whisper backdrop-blur-sm",
+                        positions[i] || "top-0 left-0"
                       )}
                     >
-                      <Icon className="h-3.5 w-3.5 text-navy" strokeWidth={1.75} />
-                    </span>
-                    {meta.short}
-                  </motion.span>
-                );
-              })}
+                      <span
+                        className={cn(
+                          "grid h-5.5 w-5.5 place-items-center rounded-full bg-gradient-to-br",
+                          meta.gradient,
+                        )}
+                      >
+                        <Icon className="h-3 w-3 text-navy" strokeWidth={2} />
+                      </span>
+                      {meta.short}
+                    </motion.span>
+                  );
+                })}
 
-              {/* center match badge */}
-              <motion.div
-                initial={reduce ? false : { opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: EASE_OUT_SOFT, delay: 0.35 }}
-                className="mt-2 inline-flex items-center gap-2.5 rounded-2xl border border-navy-100 bg-pearl px-5 py-3 shadow-soft"
-              >
-                <span className="num-display text-2xl font-medium text-navy">98%</span>
-                <span className="text-left text-[11px] leading-tight text-mute">
-                  de match con
-                  <br />
-                  <span className="font-display italic text-navy-700">tu perfil</span>
-                </span>
-              </motion.div>
+                {/* center match badge */}
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: EASE_OUT_SOFT, delay: 0.35 }}
+                  className="absolute bottom-5 right-5 inline-flex items-center gap-2 rounded-xl border border-navy-100 bg-pearl px-4 py-2.5 shadow-soft"
+                >
+                  <span className="num-display text-xl font-bold text-navy">98%</span>
+                  <span className="text-left text-[9px] leading-tight text-mute">
+                    de match con
+                    <br />
+                    <span className="font-display italic text-navy-700">tu perfil</span>
+                  </span>
+                </motion.div>
+              </div>
             </motion.div>
           </div>
         </div>
