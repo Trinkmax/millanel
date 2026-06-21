@@ -45,6 +45,30 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   // orders/order_items are admin-only under RLS; guests never touch them directly.
   const supabase = createAdminClient();
 
+  // 0. El método de pago elegido tiene que seguir HABILITADO en Ajustes.
+  //    (El gateo del checkout es sólo visual; acá lo hacemos autoritativo para
+  //    que apagar un medio en el panel realmente impida que entren pedidos por él.)
+  const { data: paySetting } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "payment")
+    .maybeSingle();
+  const paymentFlags = (paySetting?.value ?? {}) as Record<string, unknown>;
+  const methodEnabled: Record<CheckoutInput["paymentMethod"], boolean> = {
+    // habilitado salvo que esté explícitamente apagado (default = habilitado)
+    mercadopago:
+      paymentFlags.mercadopago_enabled !== false && isMercadoPagoConfigured(),
+    whatsapp: paymentFlags.whatsapp_enabled !== false,
+    transfer: paymentFlags.transfer_enabled !== false,
+    pickup_cash: paymentFlags.cash_pickup_enabled !== false,
+  };
+  if (!methodEnabled[data.paymentMethod]) {
+    return {
+      ok: false,
+      error: "Ese medio de pago ya no está disponible. Elegí otro, por favor.",
+    };
+  }
+
   // 1. Verify prices server-side
   const ids = data.items.map((i) => i.productId ?? i.id);
   const { data: priceRows, error: priceError } = await (supabase.rpc as unknown as (

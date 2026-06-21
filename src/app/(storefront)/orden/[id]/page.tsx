@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { fetchOrderByNumber } from "@/lib/actions/orders";
-import { SITE } from "@/lib/constants";
+import { getSiteInfo } from "@/lib/queries/site";
 import { formatPrice, formatDate } from "@/lib/format";
 import { MillanelMark } from "@/components/brand/millanel-mark";
 
@@ -34,6 +34,7 @@ export const dynamic = "force-dynamic";
 export default async function OrderPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const sp = await searchParams;
+  const site = await getSiteInfo();
   const order = (await fetchOrderByNumber(id)) as {
     id: string;
     order_number: string;
@@ -119,12 +120,12 @@ export default async function OrderPage({ params, searchParams }: PageProps) {
             {order.shipping_method === "pickup" ? (
               <>
                 <p className="text-sm text-navy-900">
-                  {SITE.contact.address}
+                  {site.contact.address}
                   <br />
-                  {SITE.contact.city}, {SITE.contact.province}
+                  {site.contact.city}, {site.contact.province}
                 </p>
                 <p className="text-xs text-mute mt-2">
-                  {SITE.contact.hours}
+                  {site.contact.hours}
                 </p>
               </>
             ) : (
@@ -208,7 +209,7 @@ export default async function OrderPage({ params, searchParams }: PageProps) {
         <section className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="whatsapp" size="lg" className="flex-1">
             <a
-              href={`https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent(
+              href={`https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent(
                 `Hola, soy ${order.customer_name}. Te escribo por mi pedido ${order.order_number}.`,
               )}`}
               target="_blank"

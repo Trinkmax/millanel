@@ -13,64 +13,56 @@ export const metadata: Metadata = {
 export default function IngresoPage() {
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-cream-50">
-      {/* Visual side */}
+      {/* Panel visual (sólo desktop) — navy + wordmark */}
       <div className="hidden lg:flex relative bg-navy text-cream items-center justify-center overflow-hidden paper-grain">
         <div className="absolute inset-0 halo-sky opacity-30" />
         <div className="relative px-16 max-w-md space-y-6 z-10">
           <MillanelWordmark variant="logo" tone="dark" size="lg" href={null} />
           <div className="space-y-3">
-            <p className="eyebrow text-cream/60">Panel administrativo</p>
+            <p className="eyebrow text-cream/60">Tu panel de Millanel</p>
             <h2 className="font-display text-5xl leading-tight">
-              Gestioná tu Millanel <em className="italic font-normal text-blush-200">con calma.</em>
+              Gestioná tu tienda{" "}
+              <em className="italic font-normal text-blush-200">con calma.</em>
             </h2>
             <p className="text-cream/70 text-base leading-relaxed">
-              Cargá productos, subí fotos, controlá pedidos y mirá las métricas
-              del mes. Todo desde un solo lugar.
+              Cargá productos, subí fotos, controlá pedidos y mirá cómo viene el
+              mes. Todo desde un solo lugar.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Form side */}
+      {/* Lado del formulario */}
       <div className="flex flex-col px-6 py-10 md:px-16 md:py-16">
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-mute hover:text-navy transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-mute hover:text-navy transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Volver al sitio
+            <ArrowLeft className="h-4 w-4" />
+            Volver a la tienda
           </Link>
         </div>
 
         <div className="flex-1 flex items-center">
           <div className="w-full max-w-md mx-auto space-y-8">
-            <header className="space-y-2 lg:hidden">
+            <header className="lg:hidden">
               <MillanelWordmark variant="inline" size="sm" />
             </header>
+
             <header className="space-y-3">
-              <p className="eyebrow">Acceso</p>
+              <p className="eyebrow">Tu panel</p>
               <h1 className="font-display text-4xl md:text-5xl text-navy-900 leading-tight">
-                Ingresá a tu panel
+                Hola, qué bueno verte
               </h1>
-              <p className="text-sm text-mute">
-                Acceso restringido para administradores.
+              <p className="text-base text-mute leading-relaxed">
+                Ingresá para gestionar tu tienda Millanel.
               </p>
             </header>
 
             <Suspense>
               <LoginForm />
             </Suspense>
-
-            <p className="text-xs text-mute italic">
-              ¿Olvidaste tu contraseña? Escribinos a{" "}
-              <a
-                href="mailto:soporte@millanelfrias.ar"
-                className="text-navy hover:underline"
-              >
-                soporte@millanelfrias.ar
-              </a>
-            </p>
           </div>
         </div>
       </div>

@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone, MapPin, Store, Truck } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDateTime } from "@/lib/format";
 import { OrderStatusControls } from "@/components/admin/order-status-controls";
-import { SITE } from "@/lib/constants";
+import { CustomerContact } from "@/components/admin/orders/customer-contact";
+import {
+  AdminPage,
+  SectionCard,
+  OrderStatusChip,
+  PaymentStatusChip,
+  AdminIcon,
+} from "@/components/admin/ui";
+import { shippingMethodLabel, paymentMethodLabel } from "@/lib/admin/labels";
+import { getSiteInfo } from "@/lib/queries/site";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,6 +24,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminOrderDetail({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
+  const site = await getSiteInfo();
   const [{ data: order }, { data: items }] = await Promise.all([
     supabase
       .from("orders")
@@ -42,93 +49,92 @@ export default async function AdminOrderDetail({ params }: PageProps) {
   } | null;
   const shippingAddress = (order.shipping_address ?? null) as ShippingAddress;
   const shippingZone = (
-    order as unknown as { shipping_zones: { name: string; estimated_days: string | null } | null }
+    order as unknown as {
+      shipping_zones: { name: string; estimated_days: string | null } | null;
+    }
   ).shipping_zones;
 
+  const isPickup = order.shipping_method === "pickup";
+
+  // Historial de hitos (sólo mostramos los que ya pasaron).
+  const milestones = [
+    { label: "Pedido recibido", at: order.created_at, icon: "Inbox" },
+    { label: "Pago recibido", at: order.paid_at, icon: "CircleCheck" },
+    { label: "Pedido enviado", at: order.shipped_at, icon: "Truck" },
+    { label: "Pedido entregado", at: order.delivered_at, icon: "PackageCheck" },
+  ].filter((m) => m.at);
+
   return (
-    <div className="p-6 md:p-10 space-y-8">
-      <header className="space-y-2">
+    <AdminPage>
+      {/* Encabezado: volver + número + estados grandes */}
+      <header className="space-y-3">
         <Link
           href="/admin/ordenes"
-          className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-mute hover:text-navy transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-mute transition-colors hover:text-navy"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Órdenes
+          <ArrowLeft className="h-4 w-4" />
+          Volver a pedidos
         </Link>
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1.5">
             <p className="eyebrow text-mute">Pedido</p>
-            <h1 className="font-display text-4xl md:text-5xl text-navy-900 num-display">
+            <h1 className="num-display font-display text-3xl text-navy-900 md:text-4xl">
               {order.order_number}
             </h1>
-            <p className="text-xs text-mute mt-1">
-              Creado el {formatDateTime(order.created_at)}
+            <p className="text-xs text-mute">
+              Entró el {formatDateTime(order.created_at)}
             </p>
           </div>
-          <div className="flex items-start gap-2 flex-wrap">
-            <Badge
-              variant={
-                order.payment_status === "paid"
-                  ? "success"
-                  : order.payment_status === "failed"
-                    ? "danger"
-                    : "warn"
-              }
-            >
-              {order.payment_status}
-            </Badge>
-            <Badge variant={order.status === "delivered" ? "success" : "soft"}>
-              {order.status}
-            </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <OrderStatusChip status={order.status} size="md" full />
+            <PaymentStatusChip status={order.payment_status} size="md" full />
           </div>
         </div>
       </header>
 
-      <OrderStatusControls
-        id={order.id}
-        status={order.status}
-        paymentStatus={order.payment_status}
-        adminNotes={order.admin_notes}
-      />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Columna principal: controles + productos */}
+        <div className="space-y-6 lg:col-span-2">
+          <OrderStatusControls
+            id={order.id}
+            status={order.status}
+            paymentStatus={order.payment_status}
+            adminNotes={order.admin_notes}
+          />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6 !pt-6 space-y-1">
-            <h2 className="font-display text-xl text-navy-900 mb-4">
-              Productos ({items?.length ?? 0})
-            </h2>
-            <ul className="divide-y divide-line -mx-2">
+          <SectionCard
+            title={`Productos (${items?.length ?? 0})`}
+            icon="Package"
+          >
+            <ul className="divide-y divide-line">
               {(items ?? []).map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-start gap-4 px-2 py-3"
-                >
-                  <span className="num-display font-medium text-navy w-8 shrink-0">
+                <li key={item.id} className="flex items-start gap-4 py-3 first:pt-0">
+                  <span className="num-display mt-0.5 w-9 shrink-0 text-sm font-medium text-navy">
                     ×{item.quantity}
                   </span>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-navy-900">
                       {item.product_name}
                     </p>
                     {item.product_code && (
-                      <p className="text-[11px] text-mute-soft uppercase tracking-wider mt-0.5">
-                        COD {item.product_code}
+                      <p className="num-display mt-0.5 text-[11px] text-mute-soft">
+                        Código {item.product_code}
                       </p>
                     )}
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-medium text-navy num-display">
+                  <div className="shrink-0 text-right">
+                    <p className="num-display font-medium text-navy">
                       {formatPrice(Number(item.total))}
                     </p>
-                    <p className="text-xs text-mute num-display">
+                    <p className="num-display text-xs text-mute">
                       {formatPrice(Number(item.unit_price))} c/u
                     </p>
                   </div>
                 </li>
               ))}
             </ul>
-            <Separator />
-            <div className="pt-3 space-y-1 text-sm">
+
+            <div className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">
               <Row label="Subtotal" value={formatPrice(Number(order.subtotal))} />
               <Row
                 label="Envío"
@@ -138,107 +144,114 @@ export default async function AdminOrderDetail({ params }: PageProps) {
                     : formatPrice(Number(order.shipping_cost))
                 }
               />
-              <Separator />
-              <div className="flex items-center justify-between pt-2">
+              <div className="mt-2 flex items-center justify-between border-t border-line pt-3">
                 <span className="font-display text-lg text-navy-900">Total</span>
-                <span className="font-display text-2xl text-navy num-display">
+                <span className="num-display font-display text-2xl text-navy">
                   {formatPrice(Number(order.total))}
                 </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </SectionCard>
+        </div>
 
+        {/* Columna lateral: cliente, entrega, nota de la clienta, historial */}
         <aside className="space-y-6">
-          <Card>
-            <CardContent className="p-6 !pt-6 space-y-4">
-              <h3 className="font-display text-lg text-navy-900">Cliente</h3>
-              <div className="space-y-1.5 text-sm">
-                <p className="font-medium text-navy-900">{order.customer_name}</p>
-                {order.customer_dni && (
-                  <p className="text-xs text-mute">DNI {order.customer_dni}</p>
-                )}
-                <a
-                  href={`mailto:${order.customer_email}`}
-                  className="flex items-center gap-2 text-mute hover:text-navy transition-colors"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  {order.customer_email}
-                </a>
-                <a
-                  href={`https://wa.me/${order.customer_phone.replace(/\D/g, "")}`}
-                  target="_blank"
-                  className="flex items-center gap-2 text-mute hover:text-navy transition-colors"
-                  rel="noreferrer"
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  {order.customer_phone}
-                </a>
-              </div>
-            </CardContent>
-          </Card>
+          <SectionCard title="Cliente" icon="MessageCircle">
+            <CustomerContact
+              name={order.customer_name}
+              email={order.customer_email}
+              phone={order.customer_phone}
+              dni={order.customer_dni}
+              orderNumber={order.order_number}
+            />
+          </SectionCard>
 
-          <Card>
-            <CardContent className="p-6 !pt-6 space-y-3">
-              <h3 className="font-display text-lg text-navy-900 flex items-center gap-2">
-                {order.shipping_method === "pickup" ? (
-                  <Store className="h-4 w-4" />
-                ) : (
-                  <Truck className="h-4 w-4" />
-                )}
-                {order.shipping_method === "pickup" ? "Retiro" : "Envío"}
-              </h3>
-              {order.shipping_method === "pickup" ? (
-                <p className="text-sm text-navy-900">
-                  {SITE.contact.address}, {SITE.contact.city}
+          <SectionCard
+            title={isPickup ? "Retiro en el local" : "Envío a domicilio"}
+            icon={isPickup ? "Store" : "Truck"}
+          >
+            <p className="mb-3 text-xs text-mute">
+              {shippingMethodLabel(order.shipping_method)} ·{" "}
+              {paymentMethodLabel(order.payment_method)}
+            </p>
+
+            {isPickup ? (
+              <div className="space-y-1 text-sm text-navy-900">
+                <p className="font-medium">{site.name}</p>
+                <p className="text-mute">
+                  {site.contact.address}, {site.contact.city}
                 </p>
-              ) : (
-                <>
-                  {shippingZone && (
-                    <p className="eyebrow text-mute">
-                      {shippingZone.name}
-                      {shippingZone.estimated_days && ` · ${shippingZone.estimated_days}`}
+                <p className="text-xs text-mute">{site.contact.hours}</p>
+              </div>
+            ) : (
+              <>
+                {shippingZone && (
+                  <p className="mb-2 text-xs text-mute">
+                    {shippingZone.name}
+                    {shippingZone.estimated_days &&
+                      ` · llega en ${shippingZone.estimated_days}`}
+                  </p>
+                )}
+                {shippingAddress ? (
+                  <div className="space-y-1 text-sm text-navy-900">
+                    <p className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-mute" />
+                      <span>
+                        {shippingAddress.street}
+                        <br />
+                        {shippingAddress.city}, {shippingAddress.province}
+                        <br />
+                        CP {shippingAddress.postalCode}
+                      </span>
                     </p>
-                  )}
-                  {shippingAddress && (
-                    <div className="space-y-1 text-sm text-navy-900">
-                      <p className="flex items-start gap-2">
-                        <MapPin className="h-3.5 w-3.5 mt-0.5 text-mute shrink-0" />
-                        <span>
-                          {shippingAddress.street}
-                          <br />
-                          {shippingAddress.city}, {shippingAddress.province}
-                          <br />
-                          CP {shippingAddress.postalCode}
-                        </span>
+                    {shippingAddress.notes && (
+                      <p className="ml-5 text-xs italic text-mute">
+                        {shippingAddress.notes}
                       </p>
-                      {shippingAddress.notes && (
-                        <p className="text-xs text-mute italic ml-5">
-                          {shippingAddress.notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
+                    )}
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-line bg-cream-50 px-3 py-3 text-sm text-mute">
+                    Todavía no hay una dirección cargada para este envío.
+                    Coordiná con la clienta por WhatsApp.
+                  </p>
+                )}
+              </>
+            )}
+          </SectionCard>
 
           {order.notes && (
-            <Card>
-              <CardContent className="p-6 !pt-6 space-y-2">
-                <h3 className="font-display text-lg text-navy-900">
-                  Nota del cliente
-                </h3>
-                <p className="text-sm text-mute italic leading-relaxed">
-                  {order.notes}
-                </p>
-              </CardContent>
-            </Card>
+            <SectionCard title="Nota de la clienta" icon="MessageCircle">
+              <p className="text-sm italic leading-relaxed text-mute">
+                “{order.notes}”
+              </p>
+            </SectionCard>
+          )}
+
+          {milestones.length > 0 && (
+            <SectionCard title="Historial" icon="Clock">
+              <ol className="space-y-3">
+                {milestones.map((m) => (
+                  <li key={m.label} className="flex items-center gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cream-100 text-navy-700">
+                      <AdminIcon name={m.icon} className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-navy-900">
+                        {m.label}
+                      </p>
+                      <p className="num-display text-xs text-mute">
+                        {formatDateTime(m.at)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </SectionCard>
           )}
         </aside>
       </div>
-    </div>
+    </AdminPage>
   );
 }
 
@@ -246,7 +259,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-mute">{label}</span>
-      <span className="text-navy font-medium num-display">{value}</span>
+      <span className="num-display font-medium text-navy">{value}</span>
     </div>
   );
 }

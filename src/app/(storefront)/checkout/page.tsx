@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SectionHeading } from "@/components/storefront/section-heading";
 import { CheckoutForm } from "@/components/storefront/checkout/checkout-form";
 import { getShippingZones } from "@/lib/queries/shipping";
+import { getSiteInfo } from "@/lib/queries/site";
 import { isMercadoPagoConfigured } from "@/lib/mercadopago";
 
 export const metadata: Metadata = {
@@ -12,7 +13,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
-  const [shippingZones] = await Promise.all([getShippingZones()]);
+  const [shippingZones, site] = await Promise.all([
+    getShippingZones(),
+    getSiteInfo(),
+  ]);
+
+  const mercadopagoEnabled =
+    isMercadoPagoConfigured() && site.payment.mercadopago;
 
   return (
     <div className="container-page py-10 md:py-16">
@@ -31,7 +38,10 @@ export default async function CheckoutPage() {
       <div className="mt-12">
         <CheckoutForm
           shippingZones={shippingZones}
-          mercadopagoEnabled={isMercadoPagoConfigured()}
+          mercadopagoEnabled={mercadopagoEnabled}
+          whatsappEnabled={site.payment.whatsapp}
+          transferEnabled={site.payment.transfer}
+          pickupCashEnabled={site.payment.pickup_cash}
         />
       </div>
     </div>

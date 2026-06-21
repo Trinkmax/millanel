@@ -9,7 +9,7 @@ import { useCart } from "@/lib/cart-store";
 import { publicUrl } from "@/lib/storage";
 import { parseSizes, effectivePrice } from "@/lib/variants";
 import { formatPrice } from "@/lib/format";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ function firstImage(images: unknown): string | null {
 }
 
 export function AddToCart({ product }: AddToCartProps) {
+  const site = useSiteInfo();
   const sizes = parseSizes(product.sizes);
   const hasSizes = sizes.length > 0;
   const [qty, setQty] = useState(1);
@@ -152,7 +153,7 @@ export function AddToCart({ product }: AddToCartProps) {
         </Button>
         <Button asChild size="lg" variant="whatsapp" className="w-full">
           <a
-            href={`https://wa.me/${SITE.contact.whatsapp}?text=${whatsappMessage}`}
+            href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappMessage}`}
             target="_blank"
             rel="noreferrer"
           >

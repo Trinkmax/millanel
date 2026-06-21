@@ -6,9 +6,11 @@ import {  MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 
 export function EditorialCTA() {
+  const site = useSiteInfo();
+
   return (
     <section className="container-page py-16 md:py-28">
       <motion.div
@@ -52,7 +54,7 @@ export function EditorialCTA() {
                 className="!bg-cream !text-navy hover:!bg-blush hover:!text-navy-900"
               >
                 <a
-                  href={`https://wa.me/${SITE.contact.whatsapp}`}
+                  href={`https://wa.me/${site.contact.whatsapp}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -78,25 +80,25 @@ export function EditorialCTA() {
             <div>
               <p className="eyebrow text-cream/60">Dirección</p>
               <p className="font-display text-2xl md:text-3xl mt-2 leading-tight">
-                {SITE.contact.address}
+                {site.contact.address}
                 <br />
                 <span className="text-cream/70 text-xl italic font-normal">
-                  {SITE.contact.city}, {SITE.contact.province}
+                  {site.contact.city}, {site.contact.province}
                 </span>
               </p>
             </div>
             <div>
               <p className="eyebrow text-cream/60">Horarios</p>
               <p className="text-sm text-cream/80 mt-2 leading-relaxed">
-                {SITE.contact.hours}
+                {site.contact.hours}
               </p>
             </div>
             <div>
               <p className="eyebrow text-cream/60">Pedidos</p>
               <p className="text-sm text-cream/80 mt-2 leading-relaxed">
-                {SITE.contact.phone}
+                {site.contact.phone}
                 <br />
-                {SITE.contact.email}
+                {site.contact.email}
               </p>
             </div>
           </div>

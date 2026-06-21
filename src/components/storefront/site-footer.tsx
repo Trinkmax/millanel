@@ -10,11 +10,14 @@ import {
 } from "lucide-react";
 import { InstagramIcon, FacebookIcon } from "@/components/brand/social-icons";
 import { MillanelWordmark } from "@/components/brand/millanel-wordmark";
-import { SITE } from "@/lib/constants";
 import { getCategories } from "@/lib/queries/categories";
+import { getSiteInfo } from "@/lib/queries/site";
 
 export async function SiteFooter() {
-  const categories = await getCategories();
+  const [categories, site] = await Promise.all([
+    getCategories(),
+    getSiteInfo(),
+  ]);
 
   return (
     <footer className="bg-navy text-cream mt-24">
@@ -44,11 +47,11 @@ export async function SiteFooter() {
               href={null}
             />
             <p className="text-cream/70 text-sm leading-relaxed max-w-xs">
-              {SITE.description}
+              {site.description}
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
-                href={SITE.social.instagram}
+                href={site.social.instagram}
                 aria-label="Instagram"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/20 text-cream hover:bg-cream hover:text-navy transition-colors"
                 target="_blank"
@@ -57,7 +60,7 @@ export async function SiteFooter() {
                 <InstagramIcon size={16} />
               </a>
               <a
-                href={SITE.social.facebook}
+                href={site.social.facebook}
                 aria-label="Facebook"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/20 text-cream hover:bg-cream hover:text-navy transition-colors"
                 target="_blank"
@@ -90,32 +93,32 @@ export async function SiteFooter() {
               <li className="flex items-start gap-2.5 text-cream/80">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>
-                  {SITE.contact.address}
+                  {site.contact.address}
                   <br />
-                  {SITE.contact.city}, {SITE.contact.province}
+                  {site.contact.city}, {site.contact.province}
                 </span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0" />
                 <a
-                  href={`tel:${SITE.contact.phone.replace(/\s/g, "")}`}
+                  href={`tel:${site.contact.phone.replace(/\s/g, "")}`}
                   className="text-cream/80 hover:text-cream transition-colors"
                 >
-                  {SITE.contact.phone}
+                  {site.contact.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0" />
                 <a
-                  href={`mailto:${SITE.contact.email}`}
+                  href={`mailto:${site.contact.email}`}
                   className="text-cream/80 hover:text-cream transition-colors"
                 >
-                  {SITE.contact.email}
+                  {site.contact.email}
                 </a>
               </li>
               <li className="flex items-start gap-2.5 text-cream/80">
                 <Clock className="h-4 w-4 mt-0.5 shrink-0" />
-                <span className="text-xs">{SITE.contact.hours}</span>
+                <span className="text-xs">{site.contact.hours}</span>
               </li>
             </ul>
           </div>
@@ -131,7 +134,7 @@ export async function SiteFooter() {
                 <FooterLink href="/contacto">Contacto</FooterLink>
               </li>
               <li>
-                <FooterLink href={`https://wa.me/${SITE.contact.whatsapp}`} external>
+                <FooterLink href={`https://wa.me/${site.contact.whatsapp}`} external>
                   WhatsApp
                 </FooterLink>
               </li>
@@ -156,11 +159,22 @@ export async function SiteFooter() {
         {/* Copyright */}
         <div className="mt-12 pt-6 border-t border-cream/15 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-cream/50">
           <p>
-            © {new Date().getFullYear()} Millanel Frías · {SITE.owner.name}.
+            © {new Date().getFullYear()} Millanel Frías · {site.owner.name}.
             Todos los derechos reservados.
           </p>
-          <p className="italic font-display text-cream/60">
-            Hecho con cariño en Santiago del Estero.
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:justify-end">
+            <span className="font-display italic text-cream/65">
+              Hecho con amor para mamá&nbsp;❤️
+            </span>
+            <span aria-hidden className="text-cream/25">·</span>
+            <a
+              href="https://studiossystem.com/en"
+              target="_blank"
+              rel="noreferrer"
+              className="text-cream/55 transition-colors hover:text-cream"
+            >
+              studiOS System
+            </a>
           </p>
         </div>
       </div>

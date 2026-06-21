@@ -15,14 +15,19 @@ import {
   FacebookIcon,
   WhatsAppIcon,
 } from "@/components/brand/social-icons";
-import { SITE } from "@/lib/constants";
+import { getSiteInfo } from "@/lib/queries/site";
 
-export const metadata: Metadata = {
-  title: "Contacto",
-  description: `Encontranos en ${SITE.contact.address}, ${SITE.contact.city}. WhatsApp, email y mapa.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteInfo();
+  return {
+    title: "Contacto",
+    description: `Encontranos en ${site.contact.address}, ${site.contact.city}. WhatsApp, email y mapa.`,
+  };
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const site = await getSiteInfo();
+
   return (
     <div>
       <section className="container-page pt-10 md:pt-16 pb-8 md:pb-12">
@@ -48,7 +53,7 @@ export default function ContactPage() {
             icon={WhatsAppIcon}
             title="WhatsApp"
             cta="Abrir chat"
-            href={`https://wa.me/${SITE.contact.whatsapp}`}
+            href={`https://wa.me/${site.contact.whatsapp}`}
             external
             highlight
           >
@@ -60,14 +65,14 @@ export default function ContactPage() {
 
           <ContactCard icon={MapPin} title="Local de Frías">
             <p className="text-sm text-navy-900">
-              {SITE.contact.address}
+              {site.contact.address}
               <br />
               <span className="text-mute">
-                {SITE.contact.city}, {SITE.contact.province} ({SITE.contact.postalCode})
+                {site.contact.city}, {site.contact.province} ({site.contact.postalCode})
               </span>
             </p>
             <Button asChild variant="ghost" size="sm" className="mt-2 -ml-3">
-              <a href={SITE.maps.link} target="_blank" rel="noreferrer">
+              <a href={site.maps.link} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-3.5 w-3.5" />
                 Ver en Google Maps
               </a>
@@ -76,7 +81,7 @@ export default function ContactPage() {
 
           <ContactCard icon={Clock} title="Horario de atención">
             <p className="text-sm text-navy-900 leading-relaxed">
-              {SITE.contact.hours}
+              {site.contact.hours}
             </p>
             <p className="text-xs text-mute italic mt-2">
               Pedidos online los 7 días. Despachos según día hábil.
@@ -84,17 +89,17 @@ export default function ContactPage() {
           </ContactCard>
 
           <div className="grid grid-cols-2 gap-3">
-            <ContactCardSmall icon={Phone} href={`tel:${SITE.contact.phone}`} label="Teléfono">
-              {SITE.contact.phone}
+            <ContactCardSmall icon={Phone} href={`tel:${site.contact.phone}`} label="Teléfono">
+              {site.contact.phone}
             </ContactCardSmall>
-            <ContactCardSmall icon={Mail} href={`mailto:${SITE.contact.email}`} label="Email">
-              {SITE.contact.email}
+            <ContactCardSmall icon={Mail} href={`mailto:${site.contact.email}`} label="Email">
+              {site.contact.email}
             </ContactCardSmall>
           </div>
 
           <div className="flex items-center gap-3">
             <a
-              href={SITE.social.instagram}
+              href={site.social.instagram}
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
@@ -103,7 +108,7 @@ export default function ContactPage() {
               <InstagramIcon size={16} />
             </a>
             <a
-              href={SITE.social.facebook}
+              href={site.social.facebook}
               target="_blank"
               rel="noreferrer"
               aria-label="Facebook"
@@ -131,7 +136,7 @@ export default function ContactPage() {
           {/* Map */}
           <div className="rounded-2xl overflow-hidden border border-line shadow-soft">
             <iframe
-              src={SITE.maps.embedSrc}
+              src={site.maps.embedSrc}
               width="100%"
               height="420"
               style={{ border: 0 }}

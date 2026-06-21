@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { MillanelWordmark } from "@/components/brand/millanel-wordmark";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 import type { Category } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ categories }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const site = useSiteInfo();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -107,7 +108,7 @@ export function MobileMenu({ categories }: MobileMenuProps) {
             </li>
             <li>
               <NavLink
-                href={`https://wa.me/${SITE.contact.whatsapp}`}
+                href={`https://wa.me/${site.contact.whatsapp}`}
                 target="_blank"
                 onClick={() => setOpen(false)}
                 className="text-[#1DAE54]"
@@ -122,14 +123,14 @@ export function MobileMenu({ categories }: MobileMenuProps) {
         <div className="border-t border-line px-6 py-5 bg-pearl">
           <p className="eyebrow mb-2">Visitanos</p>
           <p className="font-display text-lg text-navy-900 leading-snug">
-            {SITE.contact.address}
+            {site.contact.address}
             <br />
             <span className="text-mute text-sm font-sans not-italic">
-              {SITE.contact.city}, {SITE.contact.province}
+              {site.contact.city}, {site.contact.province}
             </span>
           </p>
           <Link
-            href={SITE.maps.link}
+            href={site.maps.link}
             target="_blank"
             className="mt-3 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-navy-700 link-line"
           >

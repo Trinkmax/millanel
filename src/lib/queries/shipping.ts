@@ -16,7 +16,8 @@ async function _getShippingZones(): Promise<ShippingZone[]> {
     .from("shipping_zones")
     .select("*")
     .eq("active", true)
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as ShippingZone[];
 }

@@ -1,8 +1,16 @@
 import { CategoryManager } from "@/components/admin/category-manager";
+import { AdminPage, PageHeader } from "@/components/admin/ui";
 import { createClient } from "@/lib/supabase/server";
 import type { Category } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
+
+/* Conteo en español, sin números crudos sueltos. */
+function countLabel(n: number): string {
+  if (n === 0) return "Sin secciones todavía";
+  if (n === 1) return "1 sección";
+  return `${n} secciones`;
+}
 
 export default async function AdminCategoriesPage() {
   const supabase = await createClient();
@@ -11,18 +19,16 @@ export default async function AdminCategoriesPage() {
     .select("*")
     .order("sort_order", { ascending: true });
 
+  const categories = (data ?? []) as Category[];
+
   return (
-    <div className="p-6 md:p-10 space-y-8">
-      <header className="space-y-2">
-        <p className="eyebrow text-mute">{data?.length ?? 0} categorías</p>
-        <h1 className="font-display text-3xl md:text-4xl text-navy-900">
-          Categorías
-        </h1>
-        <p className="text-mute">
-          Organizá los productos en secciones que aparecen en el menú y en el catálogo.
-        </p>
-      </header>
-      <CategoryManager initial={(data ?? []) as Category[]} />
-    </div>
+    <AdminPage>
+      <PageHeader
+        eyebrow={countLabel(categories.length)}
+        title="Secciones de la tienda"
+        subtitle="Organizá tus productos en secciones. El orden de acá es el mismo que ve la clienta en el menú y en el catálogo."
+      />
+      <CategoryManager initial={categories} />
+    </AdminPage>
   );
 }

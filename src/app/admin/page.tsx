@@ -1,21 +1,34 @@
 import Link from "next/link";
 import {
-  TrendingUp,
-  ShoppingBag,
   Package,
-  Users,
-  AlertCircle,
+  Truck,
+  Clock,
+  Check,
   ArrowRight,
-  Sparkles,
+  TrendingUp,
+  Users,
+  CircleAlert,
+  type LucideIcon,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AdminPage,
+  PageHeader,
+  SectionCard,
+  EmptyState,
+  OrderStatusChip,
+  PaymentStatusChip,
+} from "@/components/admin/ui";
 import { createClient } from "@/lib/supabase/server";
-import { formatPrice, formatNumber } from "@/lib/format";
+import { formatPrice, formatNumber, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { PeriodSwitch, type Period } from "@/components/admin/dashboard/period-switch";
+import { SalesSparkline } from "@/components/admin/dashboard/sales-sparkline";
 
 export const dynamic = "force-dynamic";
 
+/* ── Forma del JSON que devuelve el RPC dashboard_metrics(period) ──
+   Mismas claves exactas que arma la función en Postgres. No tocar. */
 interface Metrics {
   revenue: number;
   revenue_pending: number;
@@ -30,207 +43,294 @@ interface Metrics {
   revenue_by_day: { day: string; total: number }[];
 }
 
-async function fetchMetrics(period: string): Promise<Metrics | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("dashboard_metrics", { period });
-  if (error) {
-    console.error("[dashboard_metrics] error:", error);
-    return null;
-  }
-  return data as unknown as Metrics;
+/* Conteos chicos de las tareas del día (la tabla orders es chica, son
+   consultas head:true, sin traer filas). */
+interface Tasks {
+  preparar: number;
+  enviar: number;
+  sinPagar: number;
 }
 
-async function fetchRecentOrders() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("orders")
-    .select(
-      "id, order_number, customer_name, total, status, payment_status, created_at",
-    )
-    .order("created_at", { ascending: false })
-    .limit(8);
-  return data ?? [];
+// El selector sólo ofrece estos tres (el RPC soporta más, pero acá no).
+const VALID_PERIODS: Period[] = ["day", "week", "month"];
+
+function normalizePeriod(raw?: string): Period {
+  return VALID_PERIODS.includes(raw as Period) ? (raw as Period) : "month";
 }
 
-export default async function AdminDashboard() {
-  const [monthly, recent] = await Promise.all([
-    fetchMetrics("month"),
-    fetchRecentOrders(),
+// El título del período, en lenguaje de Cintia.
+const PERIOD_NOUN: Record<Period, string> = {
+  day: "de hoy",
+  week: "de la semana",
+  month: "del mes",
+};
+
+interface PageProps {
+  searchParams: Promise<{ period?: string }>;
+}
+
+export default async function AdminDashboard({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const period = normalizePeriod(sp.period);
+
+  const supabase = await createClient();
+
+  const [metrics, recent, tasks] = await Promise.all([
+    fetchMetrics(supabase, period),
+    fetchRecentOrders(supabase),
+    fetchTasks(supabase),
   ]);
 
-  if (!monthly) {
-    return (
-      <div className="p-8">
-        <p className="text-mute">Error cargando métricas.</p>
-      </div>
-    );
-  }
-
-  const today = new Date().toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const today = capitalize(
+    new Date().toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }),
+  );
 
   return (
-    <div className="p-6 md:p-10 space-y-10">
-      <header className="space-y-2">
-        <p className="eyebrow text-mute">{today}</p>
-        <h1 className="font-display text-4xl md:text-5xl text-navy-900">
-          Buen día, Cintia ✨
-        </h1>
-        <p className="text-mute">
-          Acá tenés el resumen de tu negocio en lo que va del mes.
-        </p>
-      </header>
+    <AdminPage>
+      <PageHeader
+        eyebrow={today}
+        title={
+          <>
+            Hola, Cintia <span aria-hidden>☀️</span>
+          </>
+        }
+        subtitle="Esto es lo que está pasando en tu tienda. Empezá por lo que tenés pendiente."
+        actions={<PeriodSwitch value={period} />}
+      />
 
-      {/* Stat cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={TrendingUp}
-          label="Ventas del mes"
-          value={formatPrice(monthly.revenue)}
-          hint={`${monthly.orders_paid} pedidos pagos`}
-          tone="navy"
-        />
-        <StatCard
-          icon={ShoppingBag}
-          label="Pendientes"
-          value={formatNumber(monthly.orders_pending)}
-          hint={`${formatPrice(monthly.revenue_pending)} estimado`}
-          tone="champagne"
-        />
-        <StatCard
-          icon={Users}
-          label="Clientes"
-          value={formatNumber(monthly.total_customers)}
-          hint="Únicos por email"
-          tone="sky"
-        />
-        <StatCard
-          icon={Package}
-          label="Productos activos"
-          value={formatNumber(monthly.total_products)}
-          hint={
-            monthly.low_stock > 0 ? `${monthly.low_stock} con bajo stock` : "Todo OK"
-          }
-          tone="blush"
-          warning={monthly.low_stock > 0}
-        />
-      </section>
+      {/* ── Si el RPC falla, no la dejamos sola con un error frío ── */}
+      {!metrics ? (
+        <SectionCard
+          title="No pudimos cargar los números"
+          description="A veces pasa por la conexión. Tus pedidos y productos están a salvo."
+          icon="TriangleAlert"
+        >
+          <p className="text-sm leading-relaxed text-mute">
+            Probá de nuevo en un momento. Si sigue sin cargar, cerrá sesión y
+            volvé a entrar.
+          </p>
+          <div className="mt-5">
+            <Button asChild variant="outline">
+              <Link href="/admin">Reintentar</Link>
+            </Button>
+          </div>
+        </SectionCard>
+      ) : null}
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent orders */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6 md:p-8 !pt-6">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="font-display text-2xl text-navy-900">
-                  Últimas órdenes
-                </h2>
-                <p className="text-xs text-mute mt-1">
-                  Las {recent.length} más recientes
-                </p>
-              </div>
-              <Button asChild variant="link" size="sm">
-                <Link href="/admin/ordenes">
-                  Ver todas
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
+      {/* ── Hoy te toca… ───────────────────────────────────────── */}
+      <TasksBlock tasks={tasks} />
 
-            {recent.length === 0 ? (
-              <p className="text-sm text-mute italic py-8 text-center">
-                Aún no hay órdenes.
-              </p>
-            ) : (
-              <ul className="divide-y divide-line -mx-2">
-                {recent.map((o) => (
-                  <li key={o.id} className="px-2">
-                    <Link
-                      href={`/admin/ordenes/${o.id}`}
-                      className="flex items-center gap-4 py-3 hover:bg-cream-50 rounded-md transition-colors px-2 -mx-2"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-navy-900 truncate">
-                          {o.customer_name}
-                        </p>
-                        <p className="text-xs text-mute mt-0.5 num-display">
-                          {o.order_number}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          o.payment_status === "paid"
-                            ? "success"
-                            : o.payment_status === "failed"
-                              ? "danger"
-                              : "warn"
-                        }
-                      >
-                        {o.payment_status}
-                      </Badge>
-                      <span className="num-display font-medium text-navy w-24 text-right">
-                        {formatPrice(Number(o.total))}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+      {/* ── Números importantes (KPIs clickeables) ─────────────── */}
+      {metrics ? <KpiBlock metrics={metrics} period={period} /> : null}
 
-        {/* Top products */}
-        <Card>
-          <CardContent className="p-6 md:p-8 !pt-6">
-            <h2 className="font-display text-2xl text-navy-900 mb-5">
-              Top productos
-            </h2>
-            {monthly.top_products.length === 0 ? (
-              <p className="text-sm text-mute italic py-8 text-center">
-                Aún sin datos.
-              </p>
-            ) : (
-              <ol className="space-y-3">
-                {monthly.top_products.map((p, idx) => (
-                  <li key={`${p.product_name}-${idx}`} className="flex items-center gap-3">
-                    <span className="num-display font-display text-lg text-navy-300 w-6">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-navy-900 truncate">
-                        {p.product_name}
-                      </p>
-                      <p className="text-xs text-mute mt-0.5">
-                        {p.units} unidades · {formatPrice(p.revenue)}
-                      </p>
-                    </div>
-                    <Sparkles className="h-3.5 w-3.5 text-champagne-300" />
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      {/* ── Mini gráfico de ventas (sólo si hay datos) ─────────── */}
+      {metrics && metrics.revenue_by_day.length > 0 ? (
+        <SectionCard
+          title={`Ventas ${PERIOD_NOUN[period]}`}
+          description="Cada barra es un día con ventas cobradas."
+          icon="Banknote"
+        >
+          <SalesSparkline data={metrics.revenue_by_day} />
+        </SectionCard>
+      ) : null}
 
-      {/* Quick actions */}
-      <section>
-        <h2 className="eyebrow text-mute mb-3">Acciones rápidas</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <QuickAction href="/admin/productos/nuevo" label="Cargar producto" />
-          <QuickAction href="/admin/ordenes?status=pending" label="Pedidos pendientes" />
-          <QuickAction href="/admin/productos?stock=low" label="Bajo stock" />
-          <QuickAction href="/admin/ajustes" label="Configuración" />
+      {/* ── Últimas órdenes + Top productos ────────────────────── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <RecentOrders orders={recent} className="lg:col-span-2" />
+        {metrics ? (
+          <TopProducts products={metrics.top_products} />
+        ) : null}
+      </div>
+    </AdminPage>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Bloque: "Hoy te toca…"
+   ──────────────────────────────────────────────────────────────── */
+
+function TasksBlock({ tasks }: { tasks: Tasks }) {
+  const allClear =
+    tasks.preparar === 0 && tasks.enviar === 0 && tasks.sinPagar === 0;
+
+  return (
+    <section className="space-y-3">
+      <h2 className="font-display text-2xl text-navy-900">Hoy te toca…</h2>
+
+      {allClear ? (
+        <SectionCard>
+          <EmptyState
+            icon="CheckCheck"
+            title="Estás al día ✨"
+            description="No tenés pedidos esperando. Cuando entre algo nuevo, lo vas a ver acá."
+          />
+        </SectionCard>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <TaskCard
+            href="/admin/ordenes?view=preparar"
+            icon={Package}
+            count={tasks.preparar}
+            label="Para preparar"
+            hint="Pedidos que tenés que armar."
+            tone="warn"
+          />
+          <TaskCard
+            href="/admin/ordenes?view=enviar"
+            icon={Truck}
+            count={tasks.enviar}
+            label="Para enviar"
+            hint="Listos para despachar o entregar."
+            tone="info"
+          />
+          <TaskCard
+            href="/admin/ordenes?view=sin-pagar"
+            icon={Clock}
+            count={tasks.sinPagar}
+            label="Sin pagar"
+            hint="Todavía no cobraste estos pedidos."
+            tone="champagne"
+          />
         </div>
-      </section>
+      )}
+    </section>
+  );
+}
+
+type TaskTone = "warn" | "info" | "champagne";
+
+const TASK_TONE: Record<
+  TaskTone,
+  { badge: string; ring: string }
+> = {
+  warn: {
+    badge: "bg-champagne-100 text-champagne-400",
+    ring: "hover:border-champagne-300",
+  },
+  info: {
+    badge: "bg-sky-100 text-navy",
+    ring: "hover:border-sky-300",
+  },
+  champagne: {
+    badge: "bg-blush-100 text-navy",
+    ring: "hover:border-blush-300",
+  },
+};
+
+function TaskCard({
+  href,
+  icon: Icon,
+  count,
+  label,
+  hint,
+  tone,
+}: {
+  href: string;
+  icon: LucideIcon;
+  count: number;
+  label: string;
+  hint: string;
+  tone: TaskTone;
+}) {
+  const done = count === 0;
+  const t = TASK_TONE[tone];
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group flex min-h-[7rem] flex-col justify-between gap-3 rounded-2xl border border-line bg-card p-5 shadow-whisper transition-all hover:-translate-y-0.5 hover:shadow-soft",
+        t.ring,
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div
+          className={cn(
+            "grid h-11 w-11 place-items-center rounded-full",
+            done ? "bg-cream-100 text-mute" : t.badge,
+          )}
+        >
+          {done ? (
+            <Check className="h-5 w-5" />
+          ) : (
+            <Icon className="h-5 w-5" />
+          )}
+        </div>
+        <span className="num-display font-display text-4xl leading-none text-navy-900">
+          {formatNumber(count)}
+        </span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-medium text-navy-900">{label}</p>
+          <p className="mt-0.5 text-xs text-mute">
+            {done ? "Nada pendiente acá." : hint}
+          </p>
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0 text-mute transition-transform group-hover:translate-x-0.5 group-hover:text-navy" />
+      </div>
+    </Link>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Bloque: KPIs
+   ──────────────────────────────────────────────────────────────── */
+
+function KpiBlock({
+  metrics,
+  period,
+}: {
+  metrics: Metrics;
+  period: Period;
+}) {
+  const lowStock = metrics.low_stock;
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <KpiCard
+        href="/admin/ordenes?view=todos"
+        icon={TrendingUp}
+        label={`Ventas ${PERIOD_NOUN[period]}`}
+        value={formatPrice(Number(metrics.revenue))}
+        hint={
+          Number(metrics.revenue_pending) > 0
+            ? `Pendiente de cobro: ${formatPrice(Number(metrics.revenue_pending))}`
+            : `${formatNumber(metrics.orders_paid)} pedidos cobrados`
+        }
+        tone="navy"
+      />
+      <KpiCard
+        href="/admin/ordenes?view=todos"
+        icon={Users}
+        label="Clientes que compraron"
+        value={formatNumber(metrics.total_customers)}
+        hint={`Distintos clientes ${PERIOD_NOUN[period]}`}
+        tone="sky"
+      />
+      <KpiCard
+        href={lowStock > 0 ? "/admin/productos?stock=low" : "/admin/productos"}
+        icon={Package}
+        label="Productos en la tienda"
+        value={formatNumber(metrics.total_products)}
+        hint={
+          lowStock > 0
+            ? `${formatNumber(lowStock)} con poco stock (quedan 5 o menos)`
+            : "Todo con stock suficiente"
+        }
+        tone="champagne"
+        warning={lowStock > 0}
+      />
     </div>
   );
 }
 
-function StatCard({
+type KpiTone = "navy" | "sky" | "champagne";
+
+function KpiCard({
+  href,
   icon: Icon,
   label,
   value,
@@ -238,52 +338,228 @@ function StatCard({
   tone,
   warning,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  icon: LucideIcon;
   label: string;
   value: string;
-  hint?: string;
-  tone: "navy" | "champagne" | "sky" | "blush";
+  hint: string;
+  tone: KpiTone;
   warning?: boolean;
 }) {
-  const toneClass =
+  const badge =
     tone === "navy"
       ? "bg-navy text-cream"
-      : tone === "champagne"
-        ? "bg-champagne-100 text-champagne-400"
-        : tone === "sky"
-          ? "bg-sky-100 text-navy"
-          : "bg-blush-100 text-navy";
-  return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-5 md:p-6 !pt-6">
-        <div className="flex items-start justify-between mb-3">
-          <div
-            className={`grid h-10 w-10 place-items-center rounded-full ${toneClass}`}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-          {warning && (
-            <AlertCircle className="h-4 w-4 text-champagne-400" />
-          )}
-        </div>
-        <p className="text-xs uppercase tracking-[0.16em] text-mute">{label}</p>
-        <p className="font-display text-3xl mt-1 text-navy-900 num-display">
-          {value}
-        </p>
-        {hint && <p className="text-xs text-mute mt-1.5">{hint}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuickAction({ href, label }: { href: string; label: string }) {
+      : tone === "sky"
+        ? "bg-sky-100 text-navy"
+        : "bg-champagne-100 text-champagne-400";
   return (
     <Link
       href={href}
-      className="flex items-center justify-between gap-2 rounded-lg border border-line bg-pearl px-4 py-3 text-sm font-medium text-navy-900 hover:border-navy-300 hover:bg-cream-50 transition-colors group"
+      className="group flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 shadow-whisper transition-all hover:-translate-y-0.5 hover:border-navy-300 hover:shadow-soft md:p-6"
     >
-      {label}
-      <ArrowRight className="h-3.5 w-3.5 text-mute transition-transform group-hover:translate-x-0.5 group-hover:text-navy" />
+      <div className="flex items-center justify-between">
+        <div
+          className={cn(
+            "grid h-10 w-10 place-items-center rounded-full",
+            badge,
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        {warning ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-champagne-100 px-2 py-0.5 text-[11px] font-medium text-champagne-400">
+            <CircleAlert className="h-3 w-3" />
+            Atención
+          </span>
+        ) : null}
+      </div>
+      <div>
+        <p className="text-sm text-mute">{label}</p>
+        <p className="num-display font-display mt-1 text-3xl text-navy-900">
+          {value}
+        </p>
+        <p className="mt-1.5 text-xs text-mute">{hint}</p>
+      </div>
     </Link>
   );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Bloque: Últimas órdenes
+   ──────────────────────────────────────────────────────────────── */
+
+type RecentOrder = {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  total: number;
+  status: string;
+  payment_status: string;
+  created_at: string;
+};
+
+function RecentOrders({
+  orders,
+  className,
+}: {
+  orders: RecentOrder[];
+  className?: string;
+}) {
+  return (
+    <SectionCard
+      title="Últimas órdenes"
+      icon="Inbox"
+      action={
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/admin/ordenes?view=todos">Ver todas</Link>
+        </Button>
+      }
+      className={className}
+      bodyClassName="p-0"
+    >
+      {orders.length === 0 ? (
+        <EmptyState
+          icon="Sparkles"
+          title="Todavía no hay ventas"
+          description="Cuando llegue tu primera venta va a aparecer acá, con su estado y su total."
+        />
+      ) : (
+        <ul className="divide-y divide-line">
+          {orders.map((o) => (
+            <li key={o.id}>
+              <Link
+                href={`/admin/ordenes/${o.id}`}
+                className="flex flex-col gap-2 px-5 py-4 transition-colors hover:bg-cream-50 md:px-6"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-navy-900">
+                      {o.customer_name}
+                    </p>
+                    <p className="num-display mt-0.5 text-xs text-mute">
+                      {o.order_number} · {formatDate(o.created_at)}
+                    </p>
+                  </div>
+                  <span className="num-display shrink-0 font-display text-lg text-navy-900">
+                    {formatPrice(Number(o.total))}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <OrderStatusChip status={o.status} size="sm" full />
+                  <PaymentStatusChip status={o.payment_status} size="sm" full />
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </SectionCard>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Bloque: Top productos
+   ──────────────────────────────────────────────────────────────── */
+
+function TopProducts({
+  products,
+}: {
+  products: Metrics["top_products"];
+}) {
+  return (
+    <SectionCard
+      title="Lo más vendido"
+      icon="Sparkles"
+      bodyClassName={products.length === 0 ? "p-0" : undefined}
+    >
+      {products.length === 0 ? (
+        <EmptyState
+          icon="Sparkles"
+          title="Sin datos por ahora"
+          description="Cuando vendas, acá vas a ver tus productos más pedidos."
+        />
+      ) : (
+        <ol className="space-y-4">
+          {products.map((p, idx) => (
+            <li
+              key={`${p.product_name}-${idx}`}
+              className="flex items-center gap-3"
+            >
+              <span className="num-display font-display w-7 shrink-0 text-xl text-champagne-400">
+                {idx + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-navy-900">
+                  {p.product_name}
+                </p>
+                <p className="mt-0.5 text-xs text-mute">
+                  {formatNumber(p.units)}{" "}
+                  {p.units === 1 ? "unidad" : "unidades"} ·{" "}
+                  {formatPrice(Number(p.revenue))}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </SectionCard>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Carga de datos
+   ──────────────────────────────────────────────────────────────── */
+
+type DbClient = Awaited<ReturnType<typeof createClient>>;
+
+async function fetchMetrics(
+  supabase: DbClient,
+  period: Period,
+): Promise<Metrics | null> {
+  const { data, error } = await supabase.rpc("dashboard_metrics", { period });
+  if (error || !data) {
+    console.error("[dashboard_metrics] error:", error);
+    return null;
+  }
+  return data as unknown as Metrics;
+}
+
+async function fetchRecentOrders(supabase: DbClient): Promise<RecentOrder[]> {
+  const { data } = await supabase
+    .from("orders")
+    .select(
+      "id, order_number, customer_name, total, status, payment_status, created_at",
+    )
+    .order("created_at", { ascending: false })
+    .limit(8);
+  return (data ?? []) as RecentOrder[];
+}
+
+async function fetchTasks(supabase: DbClient): Promise<Tasks> {
+  // Tres conteos chiquitos (head:true → no traen filas, sólo el número).
+  const [preparar, enviar, sinPagar] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["pending", "confirmed"]),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "preparing"),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .in("payment_status", ["pending", "in_process"])
+      .neq("status", "cancelled"),
+  ]);
+
+  return {
+    preparar: preparar.count ?? 0,
+    enviar: enviar.count ?? 0,
+    sinPagar: sinPagar.count ?? 0,
+  };
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

@@ -42,6 +42,8 @@ export const CategoryFormSchema = z.object({
   name: z.string().min(2),
   slug: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  // Imagen de la categoría (path bucket-relativo en bucket 'category-images').
+  image_path: z.string().nullable().optional(),
   sort_order: z.number().int(),
   featured: z.boolean(),
   active: z.boolean(),

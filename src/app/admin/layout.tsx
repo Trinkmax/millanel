@@ -39,8 +39,17 @@ export default async function AdminLayout({
     );
   }
 
+  // Pedidos que requieren acción → globito en el tab "Pedidos".
+  const { count: pendingCount } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["pending", "confirmed", "preparing"]);
+
   return (
-    <AdminShell user={{ full_name: profile.full_name, email: profile.email }}>
+    <AdminShell
+      user={{ full_name: profile.full_name, email: profile.email }}
+      pendingCount={pendingCount ?? 0}
+    >
       {children}
     </AdminShell>
   );

@@ -5,9 +5,11 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight, Quote } from "lucide-react";
 import { MillanelMark } from "@/components/brand/millanel-mark";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 
 export function BrandStory() {
+  const site = useSiteInfo();
+
   return (
     <section className="container-page py-16 md:py-28">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
@@ -69,8 +71,8 @@ export function BrandStory() {
           </h2>
           <Quote className="h-7 w-7 text-champagne-300 -mb-2" />
           <p className="text-base md:text-lg text-mute leading-relaxed">
-            Soy <strong className="text-navy-900 font-medium">{SITE.owner.name}</strong>,
-            distribuidora oficial Millanel en Frías. Desde mi local en {SITE.contact.address}{" "}
+            Soy <strong className="text-navy-900 font-medium">{site.owner.name}</strong>,
+            distribuidora oficial Millanel en Frías. Desde mi local en {site.contact.address}{" "}
             elijo, pruebo y recomiendo cada uno de los productos que llegan a tus manos.
             Atiendo con confianza, conocimiento y cariño — como si te recibiera en mi propia casa.
           </p>
@@ -86,12 +88,6 @@ export function BrandStory() {
                 +550
               </p>
               <p className="mt-1">productos en catálogo</p>
-            </div>
-            <div>
-              <p className="num-display font-display text-3xl text-navy normal-case tracking-normal leading-none">
-                24
-              </p>
-              <p className="mt-1">provincias envío</p>
             </div>
           </div>
           <div className="pt-4">

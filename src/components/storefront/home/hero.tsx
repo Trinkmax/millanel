@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const FADE_UP = {
@@ -17,6 +17,8 @@ const FADE_UP = {
 };
 
 export function Hero() {
+  const site = useSiteInfo();
+
   return (
     <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-32">
       {/* Decorative halos */}
@@ -109,7 +111,7 @@ export function Hero() {
             </Button>
             <Button asChild size="lg" variant="whatsapp">
               <a
-                href={`https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent("Hola Cintia, me gustaría consultar por…")}`}
+                href={`https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent("Hola Cintia, me gustaría consultar por…")}`}
                 target="_blank"
                 rel="noreferrer"
               >

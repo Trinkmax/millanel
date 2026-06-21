@@ -7,7 +7,7 @@ import { Sparkles, RotateCcw, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
 import { MatchCard } from "./match-card";
 import { submitQuizLead } from "@/lib/actions/quiz";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 import { EASE_OUT_SOFT } from "@/lib/motion";
 import type { QuizAnswers, QuizResult } from "@/lib/asesoria/types";
 
@@ -20,6 +20,7 @@ export function ResultReveal({
   answers: QuizAnswers;
   onRestart: () => void;
 }) {
+  const site = useSiteInfo();
   const reduce = useReducedMotion();
   const [done, setDone] = useState(!!reduce);
   const sent = useRef(false);
@@ -76,7 +77,7 @@ export function ResultReveal({
     "",
     "Me gustaría más info 💛",
   ].join("\n");
-  const waUrl = `https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent(waMessage)}`;
+  const waUrl = `https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent(waMessage)}`;
 
   if (!done) {
     return (

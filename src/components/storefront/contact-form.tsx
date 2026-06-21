@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/ui/form-field";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 
 const TOPICS = [
   "Consulta sobre un producto",
@@ -17,6 +17,7 @@ const TOPICS = [
 ];
 
 export function ContactForm() {
+  const site = useSiteInfo();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [topic, setTopic] = useState(TOPICS[0]);
@@ -31,7 +32,7 @@ export function ContactForm() {
       "",
       `Tel: ${phone}`,
     ].join("\n");
-    return `https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent(text)}`;
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -81,7 +82,7 @@ export function ContactForm() {
       </FormField>
       <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
         <Button type="button" variant="ghost" asChild className="flex-1">
-          <a href={`mailto:${SITE.contact.email}`}>
+          <a href={`mailto:${site.contact.email}`}>
             <Send className="h-4 w-4" />
             O escribinos por email
           </a>

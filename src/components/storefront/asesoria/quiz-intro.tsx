@@ -1,15 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { Sparkles, Wand2, Gift, ArrowRight } from "lucide-react";
+import { Sparkles, Gift, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EASE_OUT_SOFT } from "@/lib/motion";
-
-const STEPS_PREVIEW = [
-  { icon: Wand2, label: "Respondé 5 preguntas" },
-  { icon: Sparkles, label: "Descubrí tu perfil de aroma" },
-  { icon: Gift, label: "Llevate tu match ideal" },
-];
 
 export function QuizIntro({
   isGift,
@@ -71,27 +65,6 @@ export function QuizIntro({
               te recomendamos, entre {candidateCount}+ fragancias, las que más van con vos.
             </motion.p>
           </div>
-
-          {/* Mini stepper preview */}
-          <motion.ul
-            {...fade(0.18)}
-            className="flex flex-wrap items-center gap-3"
-          >
-            {STEPS_PREVIEW.map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <li key={s.label} className="flex items-center gap-2">
-                  <span className="flex items-center gap-2 rounded-full border border-line bg-pearl/70 px-3.5 py-2 text-xs font-medium text-navy-700">
-                    <Icon className="h-3.5 w-3.5 text-navy" strokeWidth={1.75} />
-                    {s.label}
-                  </span>
-                  {i < STEPS_PREVIEW.length - 1 && (
-                    <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-mute-soft" />
-                  )}
-                </li>
-              );
-            })}
-          </motion.ul>
 
           {/* Gift toggle & CTA */}
           <div className="space-y-6 pt-2">

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/storefront/home/hero";
-import { ValueStrip } from "@/components/storefront/home/value-strip";
 import { CategoriesGrid } from "@/components/storefront/home/categories-grid";
 import { BrandStory } from "@/components/storefront/home/brand-story";
 import { EditorialCTA } from "@/components/storefront/home/editorial-cta";
@@ -29,7 +28,6 @@ export default async function HomePage() {
   return (
     <div className="paper-grain">
       <Hero />
-      <ValueStrip />
 
       {/* Asesoría de aroma — guided scent-finder entry point */}
       <AdvisorTeaser />

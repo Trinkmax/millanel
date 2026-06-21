@@ -39,6 +39,9 @@ import type { ShippingZone } from "@/lib/supabase/types";
 interface CheckoutFormProps {
   shippingZones: ShippingZone[];
   mercadopagoEnabled: boolean;
+  whatsappEnabled: boolean;
+  transferEnabled: boolean;
+  pickupCashEnabled: boolean;
 }
 
 type PaymentMethod = CheckoutInput["paymentMethod"];
@@ -75,17 +78,51 @@ const PAYMENT_METHODS: {
   },
 ];
 
-export function CheckoutForm({ shippingZones, mercadopagoEnabled }: CheckoutFormProps) {
+export function CheckoutForm({
+  shippingZones,
+  mercadopagoEnabled,
+  whatsappEnabled,
+  transferEnabled,
+  pickupCashEnabled,
+}: CheckoutFormProps) {
   const router = useRouter();
   const items = useCart((s) => s.items);
   const clear = useCart((s) => s.clear);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // Qué métodos puede usar la clienta, según lo que la dueña habilitó en
+  // Ajustes. MercadoPago igual necesita estar configurado por env. Los demás
+  // métodos directamente no se muestran si están deshabilitados.
+  const methodEnabled = useMemo<Record<PaymentMethod, boolean>>(
+    () => ({
+      mercadopago: mercadopagoEnabled,
+      whatsapp: whatsappEnabled,
+      transfer: transferEnabled,
+      pickup_cash: pickupCashEnabled,
+    }),
+    [mercadopagoEnabled, whatsappEnabled, transferEnabled, pickupCashEnabled],
+  );
+
+  // MercadoPago se sigue mostrando (deshabilitado con aviso) cuando falta la
+  // config de env; el resto se filtra por completo si la dueña los apagó.
+  const availableMethods = useMemo(
+    () =>
+      PAYMENT_METHODS.filter(
+        (m) => m.value === "mercadopago" || methodEnabled[m.value],
+      ),
+    [methodEnabled],
+  );
+
+  const defaultPaymentMethod =
+    availableMethods.find((m) => methodEnabled[m.value])?.value ??
+    availableMethods[0]?.value ??
+    "whatsapp";
+
   const [shippingMethod, setShippingMethod] = useState<"pickup" | "shipping">("pickup");
   const [shippingZoneId, setShippingZoneId] = useState<string>(shippingZones[0]?.id ?? "");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    mercadopagoEnabled ? "mercadopago" : "whatsapp",
+    defaultPaymentMethod,
   );
 
   const [customerName, setCustomerName] = useState("");
@@ -359,7 +396,7 @@ export function CheckoutForm({ shippingZones, mercadopagoEnabled }: CheckoutForm
             onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
             className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
-            {PAYMENT_METHODS.map((m) => {
+            {availableMethods.map((m) => {
               const disabled = m.value === "mercadopago" && !mercadopagoEnabled;
               return (
                 <RadioOption

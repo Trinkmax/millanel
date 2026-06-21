@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { WhatsAppIcon } from "@/components/brand/social-icons";
-import { SITE } from "@/lib/constants";
+import { useSiteInfo } from "@/components/storefront/site-info-provider";
 
 const HIDDEN_PATHS = [
   "/checkout",
@@ -16,6 +16,7 @@ const HIDDEN_PATHS = [
 
 export function FloatingWhatsApp() {
   const pathname = usePathname();
+  const site = useSiteInfo();
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) return null;
 
   return (
@@ -33,7 +34,7 @@ export function FloatingWhatsApp() {
       }}
     >
       <Link
-        href={`https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent("Hola Cintia, vengo desde la web de Millanel Frías ✨")}`}
+        href={`https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent("Hola Cintia, vengo desde la web de Millanel Frías ✨")}`}
         target="_blank"
         rel="noreferrer"
         aria-label="Escribinos por WhatsApp"

@@ -4,14 +4,19 @@ import Link from "next/link";
 import { Quote, Sparkles, Heart, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MillanelMark } from "@/components/brand/millanel-mark";
-import { SITE } from "@/lib/constants";
+import { getSiteInfo } from "@/lib/queries/site";
 
-export const metadata: Metadata = {
-  title: "Sobre nosotros",
-  description: `Conocé la historia detrás de ${SITE.name}, distribuidora oficial Millanel atendida por ${SITE.owner.name}.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteInfo();
+  return {
+    title: "Sobre nosotros",
+    description: `Conocé la historia detrás de ${site.name}, distribuidora oficial Millanel atendida por ${site.owner.name}.`,
+  };
+}
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const site = await getSiteInfo();
+
   return (
     <div className="paper-grain">
       {/* Hero */}
@@ -44,7 +49,7 @@ export default function AboutPage() {
               <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] shadow-deep">
                 <Image
                   src="/cintia.jpg"
-                  alt={SITE.owner.name}
+                  alt={site.owner.name}
                   fill
                   sizes="(max-width: 1024px) 80vw, 45vw"
                   className="object-cover"
@@ -55,7 +60,7 @@ export default function AboutPage() {
           <div className="lg:col-span-6 space-y-6">
             <Quote className="h-8 w-8 text-champagne-300" />
             <p className="font-display text-3xl md:text-4xl leading-snug tracking-tight text-navy-900">
-              Soy <em className="italic text-navy-700">{SITE.owner.name}</em>. Hace más de doce años elijo, pruebo y comparto los productos Millanel con quienes me confían sus rutinas de belleza.
+              Soy <em className="italic text-navy-700">{site.owner.name}</em>. Hace más de doce años elijo, pruebo y comparto los productos Millanel con quienes me confían sus rutinas de belleza.
             </p>
             <div className="space-y-4 text-base text-mute leading-relaxed">
               <p>
@@ -64,7 +69,7 @@ export default function AboutPage() {
                 la crema que la mamá pidió o ese regalo perfecto para sorprender.
               </p>
               <p>
-                Atender en {SITE.contact.address} es atender en casa: con tiempo, con
+                Atender en {site.contact.address} es atender en casa: con tiempo, con
                 pruebas, con consejos honestos y con la confianza de saber que
                 detrás de cada producto hay una historia.
               </p>
@@ -129,7 +134,7 @@ export default function AboutPage() {
               ¿Pasás por Frías esta semana?
             </h2>
             <p className="text-cream/70 leading-relaxed">
-              Te recibimos en {SITE.contact.address}. Probá los perfumes, llevate
+              Te recibimos en {site.contact.address}. Probá los perfumes, llevate
               muestras y contale a Cintia lo que estás buscando.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
