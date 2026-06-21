@@ -20,9 +20,8 @@ export const metadata: Metadata = {
 export const revalidate = 300; // 5 minutes
 
 export default async function HomePage() {
-  const [featured, newest, categories, alternatives] = await Promise.all([
+  const [featured, categories, alternatives] = await Promise.all([
     getProducts({ featured: true, limit: 8, hasImage: true }),
-    getProducts({ isNew: true, limit: 8, hasImage: true }),
     getCategories({ featured: true }),
     getAlternatives(),
   ]);
@@ -78,26 +77,6 @@ export default async function HomePage() {
       </section>
 
       <BrandStory />
-
-      {/* Newest */}
-      <section className="container-page py-20 md:py-28 border-t border-line">
-        <SectionHeading
-          eyebrow="Llegaron hace poco"
-          title={
-            <>
-              Lo nuevo,{" "}
-              <em className="italic font-normal text-navy-700">recién bajado del catálogo.</em>
-            </>
-          }
-          description="Productos de la edición C06-2026 que recién están entrando a tu Millanel local."
-          link={{ href: "/productos?nuevos=1", label: "Ver novedades" }}
-        />
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-8">
-          {newest.products.map((p, idx) => (
-            <ProductCard key={p.id} product={p} index={idx} />
-          ))}
-        </div>
-      </section>
 
       <EditorialCTA />
     </div>
