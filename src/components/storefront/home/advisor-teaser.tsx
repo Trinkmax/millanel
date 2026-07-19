@@ -90,7 +90,7 @@ export function AdvisorTeaser() {
             >
               {/* The gorgeous teaser image */}
               <img
-                src="/images/asesoria/advisor-teaser.png"
+                src="/images/asesoria/advisor-teaser.webp"
                 alt="Encontrá tu perfume ideal"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105"
               />

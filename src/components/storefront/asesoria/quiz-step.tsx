@@ -35,7 +35,7 @@ export function QuizStep({
   onInspired: (ref: InspiredRef | null) => void;
 }) {
   // Map step to thematic image path
-  const imageSrc = `/images/asesoria/step-${question.id}.png`;
+  const imageSrc = `/images/asesoria/step-${question.id}.webp`;
 
   return (
     <div className="grid gap-10 md:grid-cols-12 md:gap-14 items-center">

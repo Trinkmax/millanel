@@ -37,7 +37,7 @@ export function QuizIntro({
           className="md:col-span-5 relative aspect-[4/3] md:aspect-[3/4] w-full overflow-hidden rounded-[24px] shadow-medium border border-line"
         >
           <img
-            src="/images/asesoria/quiz-intro.png"
+            src="/images/asesoria/quiz-intro.webp"
             alt="Perfumes"
             className="absolute inset-0 h-full w-full object-cover"
           />
