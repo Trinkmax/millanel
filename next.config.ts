@@ -10,6 +10,10 @@ const supabaseHost =
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
+    // Sin optimizador de Vercel: el plan Hobby tiene 5K transformaciones/mes y al
+    // agotarse /_next/image devuelve 402 y rompe TODAS las imágenes en producción.
+    // Las imágenes se sirven tal cual desde el CDN de Supabase.
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
